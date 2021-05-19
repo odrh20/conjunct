@@ -11,9 +11,9 @@ class DFA:
 
     def run_state_transition(self, input_letter):
         """Takes in current state and goes to next state based on input symbol."""
-        print("CURRENT STATE : {}\tINPUT LETTER : {}\t NEXT STATE : {}".format(self.current_state, input_letter,
-                                                                               self.transitions[self.current_state][
-                                                                                   input_letter]))
+        #print("CURRENT STATE : {}\tINPUT LETTER : {}\t NEXT STATE : {}".format(self.current_state, input_letter,
+                                                                               #self.transitions[self.current_state][
+                                                                                   #input_letter]))
         self.current_state = self.transitions[self.current_state][input_letter]
         return self.current_state
 
@@ -25,14 +25,20 @@ class DFA:
         """Run the machine on input string"""
         self.current_state = self.initial_state
         computation = []
-        for ele in in_string:
-            check_state = self.run_state_transition(ele)
-            # Check if new state is not REJECT
-            if (check_state == 'REJECT'):
-                return False
-        return self.check_if_accept()
+        for i in range(len(input_string)):
+            computation.append((self.current_state, input_string[i:]))
+            self.run_state_transition(input_string[i])
+
+        if not self.check_if_accept():
+            return "Input string rejected."
+        else:
+            computation.append((self.current_state, 'e'))
+            return "Input string accepted. Computation: ", computation
 
 
+
+
+# DFA which matches all binary strings ending in an odd number of '1's
 dfa = DFA(
     states={'q0', 'q1', 'q2'},
     input_alphabet={'0', '1'},
@@ -45,6 +51,8 @@ dfa = DFA(
     accepting_states={'q1'}
 )
 
+input_str = input("Enter the input string : ")
+print(dfa.run_machine(input_str))
 
 
 # states: set of strings
