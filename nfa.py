@@ -76,30 +76,28 @@ class NFA:
 
         return next_state, config[1][1:]
 
-    def run_deterministic_transitions(self, config, config_dict, local_computation=None):
-        # return configuration, local_computation, accept bool, reject bool
+    def run_transitions(self, config, config_dict, computation):
+        # return configuration, computation, accept bool, reject bool
 
-        if local_computation is None:
-            local_computation = []
 
         # Check if in an accepting configuration
         if self.is_accepting_config(config):
-            return config, local_computation, True, False
+            return config, computation, True, False
 
         # Check if in a rejecting configuration
         if config not in config_dict:
-            return config, local_computation, False, True
+            return config, computation, False, True
 
         # Check if the next transition is non-deterministic
         if len(config_dict[config]) > 1:
-            return config, local_computation, False, False
+            return config, computation, False, False
 
-        # Else, run transition, update the current state, configuration and local computation, then recurse.
+        # Else, run transition, update the current state, configuration and computation, then recurse.
         letter, state = config_dict[config][0]
         self.current_state = state
         new_config = self.run_transition(config, letter, state)
-        local_computation.append(new_config)
-        return self.run_deterministic_transitions(new_config, config_dict, local_computation)
+        computation.append(new_config)
+        return self.run_transitions(new_config, config_dict, computation)
 
 
     def check_if_accept(self):
@@ -113,54 +111,75 @@ class NFA:
         computation = [current_config]
         config_dict = self.make_config_dict(input_string)
 
-        current_config, computation, accept, reject = self.run_deterministic_transitions(current_config, config_dict, computation)
+
+        current_config, computation, accept, reject = self.run_transitions(current_config, config_dict, computation)
+
         if accept:
             return "Word accepted!", computation
         if reject:
             return "Word rejected!"
 
         # Else we reached a deterministic transition. Use backtracking search algorithm.
-        return current_config, computation
-        #return self.search(current_config, config_dict, computation)
+        #return current_config, computation
+        return self.search(current_config, config_dict, computation)
 
-    def search(self, config, config_dict, computation, depth=0):
+    def search(self, config, config_dict, computation, depth=0, path=None):
         # Apply this function at a configuration where a choice of transition is available
+        if path is None:
+            path = []
+        print("Current depth: ", depth)
 
-        # Make a copy of inputs
-        _config = copy.deepcopy(config)
-        _config_dict = copy.deepcopy(config_dict)
-        _computation = copy.deepcopy(computation)
-
-        # Choose a transition at random from config dictionary
-        letter = random.choice(list(config_dict[config]))
-        next_state = random.choice(tuple(config_dict[config][letter]))
-
-        # In the copy of the config dictionary, remove all other transitions from this configuration
-        _config_dict[config] = dict()
-        _config_dict[config][letter] = {next_state}
+        # Iterate through possible transitions at given configuration
+        print("possible transitions: ", config_dict[config])
+        for index, (letter, state) in enumerate(config_dict[config]):
+            print("index: ", index)
+            print("letter: ", letter)
+            print("state: ", state)
 
 
+            # Make a copy of inputs, in case we need to backtrack
+            _config = copy.deepcopy(config)
+            _config_dict = copy.deepcopy(config_dict)
+            _computation = copy.deepcopy(computation)
+            print("_computation: ", _computation)
+
+            # In the copy of the dictionary, remove all other transitions from this configuration
+            _config_dict[config] = [(letter, state)]
+            print("transitions after removal: ", _config_dict[config])
+
+            new_config, new_computation, accept, reject = self.run_transitions(_config, _config_dict, _computation)
+            print("new_config: ", new_config)
+            print("new_computation: ", new_computation)
+            print("accept: ", accept)
+            print("reject: ", reject)
+
+
+
+            if accept:
+                return "Word accepted!", new_computation
+
+            if reject:
+                if index + 1 == len(config_dict[config]):
+                    if depth == 0:
+                        return "Word rejected!"
+                    else:
+                        # We have guessed and gone wrong. Delete node which led to the dead end and backtrack to previous depth.
+                        last_letter, last_state, last_config, last_dict, last_computation = path.pop()
+                        print("Dictionary entry before pruning: ", last_dict[last_config])
+                        print("To remove: ", last_letter, last_state)
+
+                        last_dict[last_config].remove((last_letter, last_state))
+                        print("Dictionary entry after pruning: ", last_dict[last_config])
+                        return self.search(last_config, last_dict, last_computation, depth - 1, path)
+
+            if not (accept or reject):
+                path.append((letter, state, config, config_dict, computation))
+                return self.search(new_config, _config_dict, new_computation, depth + 1, path)
 
 
 
 
 
-
-        return _config_dict[config], letter, next_state
-
-
-
-
-
-        # for i in range(len(input_string)):
-        #     computation.append((self.current_state, input_string[i:]))
-        #     self.get_next_states(input_string[i])
-        #
-        # if not self.check_if_accept():
-        #     return "Input string rejected."
-        # else:
-        #     computation.append((self.current_state, 'e'))
-        #     return "Input string accepted. Computation: ", computation
 
 
 # NFA which matches strings beginning with 'a', ending with 'a', and containing
@@ -201,10 +220,12 @@ nfa3 = NFA(
     accepting_states={'q0'}
 )
 
-nfa_dict = nfa3.make_config_dict('0110')
+#nfa_dict = nfa.make_config_dict('aa')
 #print(nfa_dict)
 
-nfa3_dict = nfa3.make_config_dict('0110')
+
+
+#nfa3_dict = nfa3.make_config_dict('0110')
 #print(nfa3_dict)
 
 #print(nfa3_dict[('q1', '0110')][0][1])
@@ -212,7 +233,9 @@ nfa3_dict = nfa3.make_config_dict('0110')
 
 
 print("")
-print(nfa.run_machine('ab'))
+#print(nfa2.run_machine('01'))
+
+print(nfa.run_machine('aaabaaaaaabaaaaabaaa'))
 
 #print(nfa2.make_config_dict('0101'))
 
