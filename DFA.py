@@ -7,7 +7,7 @@ class DFA:
         self.transitions = transitions
         self.initial_state = initial_state
         self.accepting_states = accepting_states
-        self.current_state = None
+        self.current_state = self.initial_state
 
     def run_state_transition(self, input_letter):
         """Takes in current state and goes to next state based on input symbol."""
@@ -23,7 +23,6 @@ class DFA:
 
     def run_machine(self, input_string):
         """Run the machine on input string"""
-        self.current_state = self.initial_state
         computation = []
         for i in range(len(input_string)):
             computation.append((self.current_state, input_string[i:]))
@@ -51,10 +50,24 @@ dfa = DFA(
     accepting_states={'q1'}
 )
 
-input_str = input("Enter the input string : ")
-print(dfa.run_machine(input_str))
+print(dfa.transitions['q0']['0'])
 
+#input_str = input("Enter the input string : ")
+#print(dfa.run_machine(input_str))
 
+# test_set = {'a', 'b', 'c', 'd'}
+# new_set = set()
+# for value in test_set:
+#     new_set.add((1, value))
+# test_set2 = {'e', 'f', 'g', 'h'}
+# new_set2 = set()
+# for value in test_set2:
+#     new_set2.add((2, value))
+#
+# print(new_set)
+# print(new_set2)
+# merged_set = new_set.union(new_set2)
+# print(merged_set)
 # states: set of strings
 # input_alphabet: set of strings
 # transitions: a dict consisting of the transitions for each state. Each key is a state name and each value is a dict which maps a symbol (the key) to a state (the value).
