@@ -14,11 +14,11 @@ class NFA:
         self.current_state = self.initial_state
 
 
-    def make_config_dict(self, input_word):
+    def make_config_dict__(self, input_word):
         """
         Make a dictionary with every possible configuration (state, remaining input) which has an available
         transition as keys.
-        The value for each key is a dictionary mapping the next input letter to read to possible next states
+        The value for each key is a pair (next input letter, next state)
 
         """
         config_dict = dict()
@@ -36,6 +36,31 @@ class NFA:
                 config_dict[(state, 'e')]['e'] = self.transitions[state]['e']
 
         return config_dict
+
+
+
+    def make_config_dict(self, input_word):
+
+        config_dict = dict()
+        for state in self.states:
+            for i in range(len(input_word)):
+                if state in self.transitions and (input_word[i] in self.transitions[state] or 'e' in self.transitions[state]):
+                    config_dict[(state, input_word[i:])] = []
+                    if input_word[i] in self.transitions[state]:
+                        for next_state in self.transitions[state][input_word[i]]:
+                            config_dict[(state, input_word[i:])].append((input_word[i], next_state))
+                    if 'e' in self.transitions[state]:
+                        for next_state in self.transitions[state]['e']:
+                            config_dict[(state, input_word[i:])].append(('e', next_state))
+            if state in self.transitions and 'e' in self.transitions[state]:
+                config_dict[(state, 'e')] = []
+                for next_state in self.transitions[state]['e']:
+                    config_dict[(state, 'e')].append(('e', next_state))
+        return config_dict
+
+
+
+
 
     def is_accepting_config(self, config):
         return config[0] in self.accepting_states and config[1] == 'e'
@@ -69,12 +94,8 @@ class NFA:
         if len(config_dict[config]) > 1:
             return config, local_computation, False, False
 
-        for letter in config_dict[config]:
-            if len(config_dict[config][letter]) > 1:
-                return config, local_computation, False, False
-
         # Else, run transition, update the current state, configuration and local computation, then recurse.
-        (letter, (state,)), = config_dict[config].items()
+        letter, state = config_dict[config][0]
         self.current_state = state
         new_config = self.run_transition(config, letter, state)
         local_computation.append(new_config)
@@ -99,7 +120,8 @@ class NFA:
             return "Word rejected!"
 
         # Else we reached a deterministic transition. Use backtracking search algorithm.
-        return self.search(current_config, config_dict, computation)
+        return current_config, computation
+        #return self.search(current_config, config_dict, computation)
 
     def search(self, config, config_dict, computation, depth=0):
         # Apply this function at a configuration where a choice of transition is available
@@ -179,14 +201,18 @@ nfa3 = NFA(
     accepting_states={'q0'}
 )
 
-nfa_dict = nfa2.make_config_dict('1110')
-print(nfa_dict)
+nfa_dict = nfa3.make_config_dict('0110')
+#print(nfa_dict)
+
+nfa3_dict = nfa3.make_config_dict('0110')
+#print(nfa3_dict)
+
+#print(nfa3_dict[('q1', '0110')][0][1])
 
 
 
 print("")
-print(nfa2.run_machine('1110'))
+print(nfa.run_machine('ab'))
 
 #print(nfa2.make_config_dict('0101'))
-
 
