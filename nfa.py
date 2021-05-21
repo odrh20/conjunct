@@ -1,3 +1,7 @@
+import copy
+import time
+import random
+
 class NFA:
     def __init__(self, states, input_alphabet, transitions,
                  initial_state, accepting_states):
@@ -48,26 +52,26 @@ class NFA:
         return next_state, config[1][1:]
 
     def run_deterministic_transitions(self, config, config_dict, local_computation=None):
-        # return triple of local_computation, accept bool, reject bool
+        # return configuration, local_computation, accept bool, reject bool
 
         if local_computation is None:
             local_computation = []
 
         # Check if in an accepting configuration
         if self.is_accepting_config(config):
-            return local_computation, True, False
+            return config, local_computation, True, False
 
         # Check if in a rejecting configuration
         if config not in config_dict:
-            return local_computation, False, True
+            return config, local_computation, False, True
 
         # Check if the next transition is non-deterministic
         if len(config_dict[config]) > 1:
-            return local_computation, False, False
+            return config, local_computation, False, False
 
         for letter in config_dict[config]:
             if len(config_dict[config][letter]) > 1:
-                return local_computation, False, False
+                return config, local_computation, False, False
 
         # Else, run transition, update the current state, configuration and local computation, then recurse.
         (letter, (state,)), = config_dict[config].items()
@@ -81,14 +85,49 @@ class NFA:
         """Checks if the current state is one of the accept states."""
         return self.current_state in self.accepting_states
 
+
     def run_machine(self, input_string):
         """Run the machine on input string"""
-        config = self.initial_state, input_string
-        computation = [config]
+        current_config = self.initial_state, input_string
+        computation = [current_config]
         config_dict = self.make_config_dict(input_string)
-        local_computation, accept, reject = self.run_deterministic_transitions(config, config_dict)
 
-        return local_computation, accept, reject
+        current_config, computation, accept, reject = self.run_deterministic_transitions(current_config, config_dict, computation)
+        if accept:
+            return "Word accepted!", computation
+        if reject:
+            return "Word rejected!"
+
+        # Else we reached a deterministic transition. Use backtracking search algorithm.
+        return self.search(current_config, config_dict, computation)
+
+    def search(self, config, config_dict, computation, depth=0):
+        # Apply this function at a configuration where a choice of transition is available
+
+        # Make a copy of inputs
+        _config = copy.deepcopy(config)
+        _config_dict = copy.deepcopy(config_dict)
+        _computation = copy.deepcopy(computation)
+
+        # Choose a transition at random from config dictionary
+        letter = random.choice(list(config_dict[config]))
+        next_state = random.choice(tuple(config_dict[config][letter]))
+
+        # In the copy of the config dictionary, remove all other transitions from this configuration
+        _config_dict[config] = dict()
+        _config_dict[config][letter] = {next_state}
+
+
+
+
+
+
+
+
+        return _config_dict[config], letter, next_state
+
+
+
 
 
         # for i in range(len(input_string)):
@@ -129,13 +168,25 @@ nfa2 = NFA(
     accepting_states={'q3'}
 )
 
-nfa_dict = nfa.make_config_dict('abba')
+nfa3 = NFA(
+    states={'q0', 'q1'},
+    input_alphabet={'0', '1'},
+    transitions={
+        'q0': {'0': {'q0'}, '1': {'q1'}},
+        'q1': {'0': {'q1'}, '1': {'q1'}},
+    },
+    initial_state='q0',
+    accepting_states={'q0'}
+)
+
+nfa_dict = nfa2.make_config_dict('1110')
 print(nfa_dict)
 
-(k, (v,)), = nfa_dict[('q1', 'bba')].items()
 
-print(nfa.run_machine('abba'))
 
-print(nfa2.make_config_dict('0101'))
+print("")
+print(nfa2.run_machine('1110'))
+
+#print(nfa2.make_config_dict('0101'))
 
 
