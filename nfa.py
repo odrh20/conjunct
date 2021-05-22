@@ -10,32 +10,46 @@ class NFA:
         self.transitions = transitions
         self.initial_state = initial_state
         self.accepting_states = accepting_states
-        #self.current_state = self.initial_state
 
-    def make_config_dict__(self, input_word):
-        """
-        Make a dictionary with every possible configuration (state, remaining input) which has an available
-        transition as keys.
-        The value for each key is a pair (next input letter, next state)
+        self.check_empty_loops = True
+        while self.check_empty_loops:
+            self.check_empty_loops = self.is_empty_loop()
 
-        """
-        config_dict = dict()
-        for state in self.states:
-            for i in range(len(input_word)):
-                if state in self.transitions and (input_word[i] in self.transitions[state] or 'e' in self.transitions[state]):
-                    config_dict[(state, input_word[i:])] = dict()
-                    if input_word[i] in self.transitions[state]:
-                        config_dict[(state, input_word[i:])][input_word[i]] = self.transitions[state][input_word[i]]
-                    if 'e' in self.transitions[state]:
-                        config_dict[(state, input_word[i:])]['e'] = self.transitions[state]['e']
+    def is_empty_loop(self):
 
-            if state in self.transitions and 'e' in self.transitions[state]:
-                config_dict[(state, 'e')] = dict()
-                config_dict[(state, 'e')]['e'] = self.transitions[state]['e']
+        for first_state in self.transitions:
+            for letter in self.transitions[first_state]:
+                if letter == 'e':
+                    for next_state in self.transitions[first_state][letter]:
+                        if next_state == first_state:
+                            self.transitions[first_state][letter].remove(next_state)
+                            if len(self.transitions[first_state][letter]) == 0:
+                                del self.transitions[first_state][letter]
+                            if not bool(self.transitions[first_state]):
+                                del self.transitions[first_state]
+                            return True
+        return False
 
-        return config_dict
+    def is_path_to_accept_state(self):
+
+        if len(self.accepting_states) == 0:
+            return False
+
+        if self.initial_state in self.accepting_states:
+            return True
+
+        for state in self.transitions:
+            for letter in self.transitions[state]:
+                if len(self.accepting_states.intersection(self.transitions[state][letter])) > 0:
+                    return True
+
+        return False
 
     def make_config_dict(self, input_word):
+        """
+        Takes input string and makes a dictionary with every possible configuration (state, remaining input) as keys,
+        and a list of every possible transition (letter read, next state) as values.
+        """
 
         config_dict = dict()
         for state in self.states:
@@ -57,6 +71,7 @@ class NFA:
     def is_accepting_config(self, config):
         return config[0] in self.accepting_states and config[1] == 'e'
 
+
     @staticmethod
     def run_transition(config, letter, next_state):
 
@@ -68,8 +83,12 @@ class NFA:
 
         return next_state, config[1][1:]
 
-    def run_transitions(self, config, config_dict, computation):
-        # return configuration, computation, accept bool, reject bool
+    def run_deterministic_transitions(self, config, config_dict, computation):
+        """
+        From a given NFA configuration, runs transitions as long as there is only one available.
+        Returns a new configuration and computation, and booleans to declare whether an accept state or reject state has
+        been reached.
+        """
 
         # Check if in an accepting configuration
         if self.is_accepting_config(config):
@@ -83,27 +102,29 @@ class NFA:
         if len(config_dict[config]) > 1:
             return config, computation, False, False
 
-        # Else, run transition, update the current state, configuration and computation, then recurse.
+        # Else, run transition, update the configuration and computation, then recurse.
         letter, state = config_dict[config][0]
-        #self.current_state = state
         new_config = self.run_transition(config, letter, state)
         computation.append(new_config)
-        return self.run_transitions(new_config, config_dict, computation)
+        return self.run_deterministic_transitions(new_config, config_dict, computation)
 
 
     def run_machine(self, input_string):
         """Run the machine on input string"""
+
+        if not self.is_path_to_accept_state():
+            return "No accepting states in this NFA can be reached. Every input will be rejected."
         current_config = self.initial_state, input_string
         computation = [current_config]
         config_dict = self.make_config_dict(input_string)
-        current_config, computation, accept, reject = self.run_transitions(current_config, config_dict, computation)
+        current_config, computation, accept, reject = self.run_deterministic_transitions(current_config, config_dict, computation)
 
         if accept:
             return "Word accepted!", computation
         if reject:
             return "Word rejected!"
 
-        # Else we reached a deterministic transition. Use backtracking search algorithm.
+        # Else we reached a non-deterministic transition. Use backtracking search algorithm.
         return self.search(current_config, config_dict, computation)
 
     def search(self, config, config_dict, computation, depth=0, path=None):
@@ -121,7 +142,7 @@ class NFA:
 
             # In the copy of the dictionary, remove all other transitions from this configuration
             _config_dict[config] = [(letter, state)]
-            new_config, new_computation, accept, reject = self.run_transitions(_config, _config_dict, _computation)
+            new_config, new_computation, accept, reject = self.run_deterministic_transitions(_config, _config_dict, _computation)
 
             if accept:
                 return "Word accepted!", new_computation
@@ -131,7 +152,7 @@ class NFA:
                     if depth == 0:
                         return "Word rejected!"
                     else:
-                        # We have guessed and gone wrong. Delete node which led to the dead end and backtrack to previous depth.
+                        # Need to backtrack
                         last_letter, last_state, last_config, last_dict, last_computation = path.pop()
                         last_dict[last_config].remove((last_letter, last_state))
                         return self.search(last_config, last_dict, last_computation, depth - 1, path)
@@ -139,6 +160,7 @@ class NFA:
             if not (accept or reject):
                 path.append((letter, state, config, config_dict, computation))
                 return self.search(new_config, _config_dict, new_computation, depth + 1, path)
+
 
 # beginning with 'a', ending with 'a', and containing no consecutive 'b's
 nfa = NFA(
@@ -167,7 +189,7 @@ nfa2 = NFA(
     accepting_states={'q3'}
 )
 
-# a DFA for 0*, no 1s allowed
+# a DFA for 0*
 nfa3 = NFA(
     states={'q0', 'q1'},
     input_alphabet={'0', '1'},
@@ -193,6 +215,35 @@ nfa4 = NFA(
     accepting_states={'q4'}
 )
 
+# {aa u aab}∗{b}
+nfa5 = NFA(
+    states={'q0', 'q1', 'q2', 'q3', 'q4'},
+    input_alphabet={'a', 'b'},
+    transitions={
+        'q0': {'a': {'q1', 'q2'}, 'b': {'q4'}},
+        'q1': {'a': {'q0'}},
+        'q2': {'a': {'q3'}},
+        'q3': {'b': {'q0'}}
+    },
+    initial_state='q0',
+    accepting_states={'q4'}
+)
+
+nfa6 = NFA(
+    states={'q0', 'q1', 'q2', 'q3'},
+    input_alphabet={'a', 'b'},
+    transitions={
+        'q0': {'a': {'q1'}},
+        'q1': {'b': {'q3', 'q2'}, 'e': {'q2', 'q1'}},
+        'q2': {'e': {'q2'}},
+        'q3': {'a': {'q0'}, 'e': {'q3'}}
+    },
+    initial_state='q0',
+    accepting_states={'q3'}
+)
+
+print(nfa6.transitions)
+
 #nfa_dict = nfa.make_config_dict('aa')
 #print(nfa_dict)
 
@@ -203,9 +254,6 @@ nfa4 = NFA(
 
 #print(nfa3_dict[('q1', '0110')][0][1])
 
-
-
-print("")
 #print(nfa2.run_machine('01'))
 
 #print(nfa.run_machine('aaabaaaaaabaaaaabaaa'))
@@ -218,4 +266,4 @@ while True:
     input_str = input("Enter the input string, or type 'Exit': ")
     if input_str == 'Exit':
         break
-    print(nfa4.run_machine(input_str))
+    print(nfa6.run_machine(input_str))
