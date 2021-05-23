@@ -51,51 +51,54 @@ class NFA:
 
 
 class NFAConfiguration:
-    def __init__(self, nfa, input_string, current_state=None, remaining_input=None, computation=None):
-        if computation is None:
-            computation = []
+    def __init__(self, nfa, input_string, current_state=None, remaining_input=None, computation=None, config_dict=None):
         if current_state is None:
             current_state = nfa.initial_state
+        if computation is None:
+            computation = []
         if remaining_input is None:
             remaining_input = input_string
+        if config_dict is None:
+            config_dict = dict()
+
         self.nfa = nfa
         self.input_string = input_string
         self.current_state = current_state
         self.remaining_input = remaining_input
-        #self.config = (self.current_state, self.remaining_input)
         self.computation = computation
-        self.config_dict = self.make_config_dict()
+        self.config_dict = config_dict
+        self.update_config_dict()
 
     def get_config(self):
         return self.current_state, self.remaining_input
 
-    def make_config_dict(self):
-        """
-        Takes input string and makes a dictionary with every possible configuration (state, remaining input) as keys,
-        and a list of every possible transition (letter read, next state) as values.
-        """
+    def update_config_dict(self):
 
-        config_dict = dict()
-        for state in self.nfa.states:
-            for i in range(len(self.input_string)):
-                if state in self.nfa.transitions and (self.input_string[i] in self.nfa.transitions[state] or 'e' in self.nfa.transitions[state]):
-                    config_dict[(state, self.input_string[i:])] = []
-                    if self.input_string[i] in self.nfa.transitions[state]:
-                        for next_state in self.nfa.transitions[state][self.input_string[i]]:
-                            config_dict[(state, self.input_string[i:])].append((self.input_string[i], next_state))
-                    if 'e' in self.nfa.transitions[state]:
-                        for next_state in self.nfa.transitions[state]['e']:
-                            config_dict[(state, self.input_string[i:])].append(('e', next_state))
-            if state in self.nfa.transitions and 'e' in self.nfa.transitions[state]:
-                config_dict[(state, 'e')] = []
-                for next_state in self.nfa.transitions[state]['e']:
-                    config_dict[(state, 'e')].append(('e', next_state))
-        return config_dict
+        if (self.get_config() not in self.config_dict) and (self.current_state in self.nfa.transitions):
+
+            # Case 1: Remaining input is 'e'
+            if self.remaining_input == 'e' and 'e' in self.nfa.transitions[self.current_state]:
+                self.config_dict[self.get_config()] = []
+                for next_state in self.nfa.transitions[self.current_state]['e']:
+                    self.config_dict[self.get_config()].append(('e', next_state))
+
+            # Case 2: Remaining input is non-empty
+            else:
+                if self.remaining_input[0] in self.nfa.transitions[self.current_state]:
+                    self.config_dict[self.get_config()] = []
+                    for next_state in self.nfa.transitions[self.current_state][self.remaining_input[0]]:
+                        self.config_dict[self.get_config()].append((self.remaining_input[0], next_state))
+                if 'e' in self.nfa.transitions[self.current_state]:
+                    if self.get_config() not in self.config_dict:
+                        self.config_dict[self.get_config()] = []
+                    for next_state in self.nfa.transitions[self.current_state]['e']:
+                        self.config_dict[self.get_config()].append(('e', next_state))
 
     def is_accepting_config(self):
         return self.current_state in self.nfa.accepting_states and self.remaining_input == 'e'
 
     def run_transition(self, letter, next_state):
+
         if letter == 'e':
             self.current_state = next_state
 
@@ -105,12 +108,14 @@ class NFAConfiguration:
         else:
             self.current_state, self.remaining_input = next_state, self.remaining_input[1:]
 
+        self.update_config_dict()
+
     def run_deterministic_transitions(self):
         """
         From a given NFA configuration, runs transitions as long as there is only one available.
-        Returns a new configuration and computation, and booleans to declare whether an accept state or reject state has
-        been reached.
+        Updates the configuration, and returns Accept/Reject booleans.
         """
+
 
         # Check if in an accepting configuration
         if self.is_accepting_config():
@@ -147,7 +152,6 @@ class NFAConfiguration:
         return self.search()
 
     def search(self, depth=0, path=None):
-        # Apply this function at a configuration where a choice of transition is available
         if path is None:
             path = []
 
@@ -170,15 +174,15 @@ class NFAConfiguration:
                         return "Word rejected!"
                     else:
                         # Need to backtrack
-                        last_letter, last_state, last_rem_input, last_config, last_computation = path.pop()
-                        last_self = NFAConfiguration(self.nfa, self.input_string, last_state, last_rem_input, last_computation)
-                        last_self.config_dict[self.get_config()].remove((letter, state))
+                        tried_letter, tried_state, last_current_state, last_remaining_inp, last_computation, last_dict = path.pop()
+                        last_self = NFAConfiguration(self.nfa, self.input_string, last_current_state, last_remaining_inp,
+                                                     last_computation, last_dict)
+                        last_self.config_dict[last_self.get_config()].remove((tried_letter, tried_state))
                         return last_self.search(depth - 1, path)
 
             if not (accept or reject):
-                path.append((letter, state, self.remaining_input, self.get_config(), self.computation))
+                path.append((letter, state, self.current_state, self.remaining_input, self.computation, self.config_dict))
                 return next_self.search(depth + 1, path)
-
 
 
 # beginning with 'a', ending with 'a', and containing no consecutive 'b's
@@ -261,10 +265,7 @@ nfa6 = NFA(
     accepting_states={'q3'}
 )
 
-
-
-#input_str = input("Enter the input string, or type 'Exit': ")
+# input_str = input("Enter the input string, or type 'Exit': ")
 nfa_configuration = NFAConfiguration(nfa5, 'aabaabaabaab')
 
 print(nfa_configuration.run_machine())
-
