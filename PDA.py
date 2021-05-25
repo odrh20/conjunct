@@ -52,7 +52,8 @@ class PDA:
 
 
 class PDAConfiguration:
-    def __init__(self, pda, input_string, current_state=None, current_stack=None, remaining_input=None, computation=None, config_dict=None):
+    def __init__(self, pda, input_string, current_state=None, current_stack=None, remaining_input=None,
+                 computation=None, config_dict=None):
         if current_state is None:
             current_state = pda.initial_state
         if current_stack is None:
@@ -73,7 +74,6 @@ class PDAConfiguration:
         self.config_dict = config_dict
         self.update_config_dict()
 
-
     def get_config(self):
         # A PDA configuration is a triple of (current state, remaining input, stack contents)
         return self.current_state, self.remaining_input, self.current_stack
@@ -93,18 +93,17 @@ class PDAConfiguration:
             # Check for transitions reading the next letter
             if self.remaining_input[0] in self.pda.transitions[self.current_state][self.current_stack[0]]:
                 self.config_dict[self.get_config_tuple()] = []
-                for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]][self.remaining_input[0]]:
+                for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]][
+                    self.remaining_input[0]]:
                     self.config_dict[self.get_config_tuple()].append((self.remaining_input[0], push_stack, next_state))
 
             # Check for transitions reading 'e'
-            if self.remaining_input[0] != 'e' and 'e' in self.pda.transitions[self.current_state][self.current_stack[0]]:
+            if self.remaining_input[0] != 'e' and 'e' in self.pda.transitions[self.current_state][
+                self.current_stack[0]]:
                 if self.get_config_tuple() not in self.config_dict:
                     self.config_dict[self.get_config_tuple()] = []
                 for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]]['e']:
                     self.config_dict[self.get_config_tuple()].append(('e', push_stack, next_state))
-
-
-
 
     def is_accepting_config(self):
         # An accepting configuration is when the stack is empty and remaining input is empty
@@ -163,7 +162,6 @@ class PDAConfiguration:
         Updates the configuration, and returns Accept/Reject booleans.
         """
 
-
         # Check if in an accepting configuration
         if self.is_accepting_config():
             return True, False
@@ -182,24 +180,71 @@ class PDAConfiguration:
         self.computation.append(self.get_config())
         return self.run_deterministic_transitions()
 
+    def run_machine(self):
+        """Run the machine on input string"""
+
+        self.computation.append(self.get_config())
+        accept, reject = self.run_deterministic_transitions()
+
+        if accept:
+            return "Word accepted!", self.computation
+        if reject:
+            return "Word rejected!"
+
+        # Else we reached a non-deterministic transition. Use backtracking search algorithm.
+        return self.search()
+
+    def search(self, depth=0, path=None):
+        if path is None:
+            path = []
+
+        # Iterate through possible transitions at given configuration
+        for index, (letter, push_string, state) in enumerate(self.config_dict[self.get_config_tuple()]):
+
+            # Make a copy of the NFAConfiguration object in case we need to backtrack later
+            next_self = copy.deepcopy(self)
+
+            # In the copy of the dictionary, remove all other transitions from this configuration
+            next_self.config_dict[self.get_config_tuple()] = [(letter, push_string, state)]
+            accept, reject = next_self.run_deterministic_transitions()
+
+            if accept:
+                return "Word accepted!", next_self.computation
+
+            if reject:
+                if index + 1 == len(self.config_dict[self.get_config_tuple()]):
+                    if depth == 0:
+                        return "Word rejected!"
+                    else:
+                        # Need to backtrack
+                        tried_letter, tried_push, tried_state, last_current_state, last_current_stack, last_remaining_inp, last_computation, last_dict = path.pop()
+                        last_self = PDAConfiguration(self.pda, self.input_string, last_current_state, last_current_stack, last_remaining_inp, last_computation, last_dict)
+                        last_self.config_dict[last_self.get_config_tuple()].remove((tried_letter, tried_push, tried_state))
+                        return last_self.search(depth - 1, path)
+
+            if not (accept or reject):
+                path.append((letter, push_string, state, self.current_state, self.current_stack, self.remaining_input, self.computation, self.config_dict))
+                return next_self.search(depth + 1, path)
 
 
+# a^n b^n (n>=1)
 pda = PDA(
     states={'q0', 'q1', 'q2', 'q3'},
     input_alphabet={'a', 'b'},
     stack_alphabet={'Z', 'a'},
     transitions={
-        'q0':                         # Start state
-            {'Z':                     # Stack symbol to pop
-                 {'a':                # Letter to read
-                      {('q1', 'aZ')}  # Set of (next state, stack string to push) transitions. If only one, deterministic transition.
+        'q0':  # Start state
+            {'Z':  # Stack symbol to pop
+                 {'a':  # Letter to read
+                      {('q1', 'aZ')}
+                  # Set of (next state, stack string to push) transitions. If only one, deterministic transition.
                   }
              },
         'q1':
             {'a':
                  {'a':
                       {('q1', 'aa')},
-                  'b' : {('q2', 'e')}
+                  'b': {('q2', 'e')}
                   },
 
              },
@@ -218,8 +263,60 @@ pda = PDA(
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda, 'aaabbb')
+# w w^R (even length palindromes)
+pda1 = PDA(
+    states={'q0', 'q1'},
+    input_alphabet={'0', '1'},
+    stack_alphabet={'Z', '0', '1'},
+    transitions={
+        'q0':
+            {'0':
+                 {'0':
+                      {('q0', '00')},
+                  '1':
+                      {('q0', '10')},
+                  'e':
+                      {('q1', '0')}
+                  },
+             '1':
+                 {'0':
+                      {('q0', '01')},
+                  '1':
+                      {('q0', '11')},
+                  'e':
+                      {('q1', '1')}
+                  },
+             'Z':
+                 {'0':
+                      {('q0', '0Z')},
+                  '1':
+                      {('q0', '1Z')},
+                  'e':
+                      {('q1', 'Z')}
+                  }
+             },
+        'q1':
+            {'0':
+                 {'0':
+                      {('q1', 'e')}
+                  },
+             '1':
+                 {'1':
+                      {('q1', 'e')}
+                  },
+             'Z':
+                 {'e':
+                      {('q1', 'e')}
+                  }
+             }
+    },
 
+    initial_state='q0',
+    initial_stack_symbol='Z'
+)
 
-print(pda_config.run_deterministic_transitions())
-print(pda_config.computation)
+pda_config = PDAConfiguration(pda1, '011110')
+print(pda_config.get_config())
+print(pda_config.config_dict)
+
+print(pda_config.run_machine())
