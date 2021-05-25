@@ -12,39 +12,28 @@ class PDA:
         self.initial_state = initial_state
         self.initial_stack_symbol = initial_stack_symbol
 
-    #     self.check_empty_loops = True
-    #     while self.check_empty_loops:
-    #         self.check_empty_loops = self.is_empty_loop()
-    #
-    # def is_empty_loop(self):
-    #
-    #     for first_state in self.transitions:
-    #         for letter in self.transitions[first_state]:
-    #             if letter == 'e':
-    #                 for next_state in self.transitions[first_state][letter]:
-    #                     if next_state == first_state:
-    #                         self.transitions[first_state][letter].remove(next_state)
-    #                         if len(self.transitions[first_state][letter]) == 0:
-    #                             del self.transitions[first_state][letter]
-    #                         if not bool(self.transitions[first_state]):
-    #                             del self.transitions[first_state]
-    #                         return True
-    #     return False
-    #
-    # def is_path_to_accept_state(self):
-    #
-    #     if len(self.accepting_states) == 0:
-    #         return False
-    #
-    #     if self.initial_state in self.accepting_states:
-    #         return True
-    #
-    #     for state in self.transitions:
-    #         for letter in self.transitions[state]:
-    #             if len(self.accepting_states.intersection(self.transitions[state][letter])) > 0:
-    #                 return True
-    #
-    #     return False
+        self.check_empty_loops = True
+        while self.check_empty_loops:
+            self.check_empty_loops = self.is_empty_loop()
+
+    def is_empty_loop(self):
+        # Remove any useless transitions which read the empty word, stay in same state and leave stack unchanged
+
+        for first_state in self.transitions:
+            for pop_stack in self.transitions[first_state]:
+                for letter_read in self.transitions[first_state][pop_stack]:
+                    if letter_read == 'e':
+                        for (next_state, push_stack) in self.transitions[first_state][pop_stack][letter_read]:
+                            if next_state == first_state and push_stack == pop_stack:
+                                self.transitions[first_state][pop_stack][letter_read].remove((next_state, push_stack))
+                                if len(self.transitions[first_state][pop_stack][letter_read]) == 0:
+                                    del self.transitions[first_state][pop_stack][letter_read]
+                                if not bool(self.transitions[first_state][pop_stack]):
+                                    del self.transitions[first_state][pop_stack]
+                                if not bool(self.transitions[first_state]):
+                                    del self.transitions[first_state]
+                                return True
+        return False
 
     def __str__(self):
         return f"States: {self.states} \nInput Alphabet: {self.input_alphabet} \nStack Alphabet: {self.stack_alphabet} \
@@ -227,96 +216,57 @@ class PDAConfiguration:
                 return next_self.search(depth + 1, path)
 
 
-# a^n b^n (n>=1)
+# a^n b^n (n>=0)
 pda = PDA(
     states={'q0', 'q1', 'q2', 'q3'},
     input_alphabet={'a', 'b'},
     stack_alphabet={'Z', 'a'},
     transitions={
-        'q0':  # Start state
-            {'Z':  # Stack symbol to pop
-                 {'a':  # Letter to read
-                      {('q1', 'aZ')}
-                  # Set of (next state, stack string to push) transitions. If only one, deterministic transition.
-                  }
-             },
-        'q1':
-            {'a':
-                 {'a':
-                      {('q1', 'aa')},
-                  'b': {('q2', 'e')}
-                  },
-
-             },
-        'q2':
-            {'a':
-                 {'b':
-                      {('q2', 'e')}
-                  },
-             'Z':
-                 {'e':
-                      {('q3', 'e')}
-                  }
-             }
+        'q0': {'Z': {'a': {('q1', 'aZ')}, 'e': {('q0', 'e')}}
+               },
+        'q1': {'a': {'a': {('q1', 'aa')}, 'b': {('q2', 'e')}},
+               },
+        'q2': {'a': {'b': {('q2', 'e')}}, 'Z': {'e': {('q3', 'e')}}
+               }
     },
     initial_state='q0',
     initial_stack_symbol='Z'
 )
 
-# w w^R (even length palindromes)
+# ww^R (even length palindromes)
 pda1 = PDA(
     states={'q0', 'q1'},
     input_alphabet={'0', '1'},
     stack_alphabet={'Z', '0', '1'},
     transitions={
-        'q0':
-            {'0':
-                 {'0':
-                      {('q0', '00')},
-                  '1':
-                      {('q0', '10')},
-                  'e':
-                      {('q1', '0')}
-                  },
-             '1':
-                 {'0':
-                      {('q0', '01')},
-                  '1':
-                      {('q0', '11')},
-                  'e':
-                      {('q1', '1')}
-                  },
-             'Z':
-                 {'0':
-                      {('q0', '0Z')},
-                  '1':
-                      {('q0', '1Z')},
-                  'e':
-                      {('q1', 'Z')}
-                  }
-             },
-        'q1':
-            {'0':
-                 {'0':
-                      {('q1', 'e')}
-                  },
-             '1':
-                 {'1':
-                      {('q1', 'e')}
-                  },
-             'Z':
-                 {'e':
-                      {('q1', 'e')}
-                  }
-             }
+        'q0': {'0': {'0': {('q0', '00')}, '1': {('q0', '10')}, 'e': {('q1', '0')}},
+               '1': {'0': {('q0', '01')}, '1': {('q0', '11')}, 'e': {('q1', '1')}},
+               'Z': {'0': {('q0', '0Z')}, '1': {('q0', '1Z')}, 'e': {('q1', 'Z')}}
+               },
+        'q1': {'0': {'0': {('q1', 'e')}},
+               '1': {'1': {('q1', 'e')}},
+               'Z': {'e': {('q1', 'e')}}
+               }
     },
-
     initial_state='q0',
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda1, '011110')
-print(pda_config.get_config())
-print(pda_config.config_dict)
+# a^n x^n | x = {a u b}*
+pda2 = PDA(
+    states={'q0', 'q1'},
+    input_alphabet={'a', 'b'},
+    stack_alphabet={'Z', 'a'},
+    transitions={
+        'q0':
+            {'a': {'a': {('q0', 'aa')}, 'e': {('q1', 'a'), ('q0', 'a')}}, 'Z': {'a': {('q0', 'aZ')}, 'e': {('q0', 'e')}}},
+        'q1': {'a': {'a': {('q1', 'e')}, 'b': {('q1', 'e')}}, 'Z': {'e': {('q1', 'e')}}}
+             },
+    initial_state='q0',
+    initial_stack_symbol='Z'
+)
+
+pda_config = PDAConfiguration(pda2, 'aa')
+print(pda2.transitions)
 
 print(pda_config.run_machine())
