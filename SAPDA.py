@@ -1,10 +1,12 @@
 import copy
+from Leaf import Leaf
+from Internal import Internal
 
 
 class SAPDA:
     def __init__(self, states, input_alphabet, stack_alphabet, transitions,
                  initial_state, initial_stack_symbol):
-        """Instantiate NFA object"""
+        """Instantiate SAPDA object"""
         self.states = states
         self.input_alphabet = input_alphabet
         self.stack_alphabet = stack_alphabet
@@ -41,7 +43,7 @@ class SAPDAConfiguration:
 
 
 # words with equal number of a's, b's and c's
-sapda = SAPDA(
+sapda1 = SAPDA(
     states={'q0', 'q1', 'q2'},
     input_alphabet={'a', 'b', 'c'},
     stack_alphabet={'Z', 'a', 'b', 'c'},
@@ -61,5 +63,18 @@ sapda = SAPDA(
     initial_stack_symbol='Z'
 )
 
-print(sapda)
+print(sapda1)
+
+internal = Internal(sapda1, ['Z'])
+
+print(internal.current_stack)
+
+leaf = Leaf(sapda1, ['X'], 'q0', 'abc', 'aabbcc')
+
+print(leaf.remaining_input)
+
+
+print(internal.get_config())
+print(leaf.get_config())
+
 

@@ -261,12 +261,6 @@ nfa6 = NFA(
 )
 
 # input_str = input("Enter the input string, or type 'Exit': ")
-#nfa_configuration = NFAConfiguration(nfa, 'aaabaabaaabaaaa')
+nfa_configuration = NFAConfiguration(nfa, 'aaabaabaaabaaaa')
 
-#print(nfa_configuration.run_machine())
-
-
-mytuple = 'e',
-
-mytuple.add('x')
-print()
+print(nfa_configuration.run_machine())

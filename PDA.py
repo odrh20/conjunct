@@ -4,7 +4,7 @@ import copy
 class PDA:
     def __init__(self, states, input_alphabet, stack_alphabet, transitions,
                  initial_state, initial_stack_symbol):
-        """Instantiate NFA object"""
+        """Instantiate PDA object"""
         self.states = states
         self.input_alphabet = input_alphabet
         self.stack_alphabet = stack_alphabet

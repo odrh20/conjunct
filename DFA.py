@@ -1,7 +1,7 @@
 class DFA:
     def __init__(self, states, input_alphabet, transitions,
                  initial_state, accepting_states):
-        """Instantiate NFA object"""
+        """Instantiate DFA object"""
         self.states = states
         self.input_alphabet = input_alphabet
         self.transitions = transitions
