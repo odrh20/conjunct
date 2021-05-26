@@ -12,6 +12,33 @@ class SAPDA:
         self.initial_state = initial_state
         self.initial_stack_symbol = initial_stack_symbol
 
+    def __str__(self):
+        return f"States: {self.states} \nInput Alphabet: {self.input_alphabet} \nStack Alphabet: {self.stack_alphabet} \
+               \nTransitions: {self.transitions} \nInitial State: {self.initial_state} \nInitial Stack Symbol: {self.initial_stack_symbol}"
+
+
+class SAPDAConfiguration:
+    def __init__(self, sapda, input_string, current_state=None, current_stack=None, remaining_input=None,
+                 computation=None, config_dict=None):
+        if current_state is None:
+            current_state = sapda.initial_state
+        if current_stack is None:
+            current_stack = [sapda.initial_stack_symbol]
+        if computation is None:
+            computation = []
+        if remaining_input is None:
+            remaining_input = input_string
+        if config_dict is None:
+            config_dict = dict()
+
+        self.sapda = sapda
+        self.input_string = input_string
+        self.current_state = current_state
+        self.current_stack = current_stack
+        self.remaining_input = remaining_input
+        self.computation = computation
+        self.config_dict = config_dict
+
 
 # words with equal number of a's, b's and c's
 sapda = SAPDA(
@@ -33,3 +60,6 @@ sapda = SAPDA(
     initial_state='q0',
     initial_stack_symbol='Z'
 )
+
+print(sapda)
+

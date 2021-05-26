@@ -266,7 +266,22 @@ pda2 = PDA(
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda2, 'aa')
-print(pda2.transitions)
+# a^2n b^n
+pda3 = PDA(
+    states={'q0', 'q1', 'q2'},
+    input_alphabet={'a', 'b'},
+    stack_alphabet={'Z', 'a'},
+    transitions={
+        'q0': {'Z': {'a': {('q1', 'aZ')}, 'e': {('q0', 'e')}}, 'a': {'a': {('q1', 'aa')}, 'b': {('q2', 'e')}}},
+        'q1': {'a': {'a': {('q0', 'a')}}},
+        'q2': {'a': {'b': {('q2', 'e')}}, 'Z': {'e': {('q2', 'e')}}}
+    },
+    initial_state='q0',
+    initial_stack_symbol='Z'
+)
+
+pda_config = PDAConfiguration(pda3, 'aaaabbbb')
 
 print(pda_config.run_machine())
+
+
