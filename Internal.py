@@ -11,5 +11,8 @@ class Internal(Node):
     def get_config(self):
         return self.current_stack
 
+    def __str__(self):
+        return self.current_stack
+
 
 

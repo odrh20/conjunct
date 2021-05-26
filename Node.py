@@ -14,4 +14,11 @@ class Node(ABC):
     def get_config(self):
         pass
 
+    def has_empty_stack(self):
+        return self.current_stack == ['e']
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
 

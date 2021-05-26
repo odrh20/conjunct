@@ -280,8 +280,11 @@ pda3 = PDA(
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda3, 'aaaabbbb')
+pda_config = PDAConfiguration(pda3, 'aaaaaaaabbbb')
 
 print(pda_config.run_machine())
+
+print(pda_config.config_dict)
+
 
 
