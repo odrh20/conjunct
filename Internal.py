@@ -5,8 +5,8 @@ from Node import Node
 
 
 class Internal(Node):
-    def __init__(self, sapda, current_stack):
-        super().__init__(sapda, current_stack)
+    def __init__(self, sapda, tree, current_stack):
+        super().__init__(sapda, tree, current_stack)
 
     def get_config(self):
         return self.current_stack
