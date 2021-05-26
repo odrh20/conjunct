@@ -8,7 +8,7 @@ class Node(ABC):
     def __init__(self, sapda, tree, current_stack):
         self.sapda = sapda
         self.tree = tree
-        self.current_stack = current_stack
+        self.current_stack = [current_stack]
 
     @abstractmethod
     def get_config(self):
