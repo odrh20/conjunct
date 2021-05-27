@@ -286,5 +286,12 @@ print(pda_config.run_machine())
 
 print(pda_config.config_dict)
 
+firstlist = [1,2,3]
+secondlist = [4,5,6]
+firstlist = firstlist + secondlist
+print(firstlist)
+
+
+
 
 
