@@ -8,7 +8,7 @@ from Structure import *
 class SAPDAConfiguration:
 
     def __init__(self, sapda, input_string, computation=None, configuration=None, config_dict=None,
-                 is_leaf=True, is_tree=False):
+                 is_leaf=True):
         if computation is None:
             computation = []
         if config_dict is None:
@@ -19,17 +19,44 @@ class SAPDAConfiguration:
         self.configuration = configuration
         self.config_dict = config_dict
         self.is_leaf = is_leaf
-        self.is_tree = is_tree
 
         if configuration is None:
             # Initialise a single Leaf node
-            self.configuration = Leaf(self.sapda, self.sapda.initial_stack_symbol, self.sapda.initial_state,
+            self.configuration = Leaf(self.sapda, [self.sapda.initial_stack_symbol], self.sapda.initial_state,
                                       self.input_string)
+
+        if isinstance(self.configuration, Leaf):
+            self.is_leaf = True
+        else:
+            self.is_leaf = False
 
     def is_accepting_config(self):
         return self.is_leaf and self.configuration.remaining_input == 'e' and self.configuration.has_empty_stack()
 
     def update_config_dict(self):
+        """
+        Adds current configuration to dictionary if it has a valid transition for each Leaf within it.
+        Dictionary keys: SAPDA configuration (either a single Leaf or a Tree)
+        Dictionary values: List of available transitions, where each transition is a pair (letter to read, conjuncts)
+        and conjuncts are pairs of (next state, string to push to stack).
+        """
+
+        if self.configuration.get_dict_key() not in self.config_dict and self.configuration.has_valid_transition():
+
+        #     # Check for transitions reading the next letter
+        #     if self.remaining_input[0] in self.pda.transitions[self.current_state][self.current_stack[0]]:
+        #         self.config_dict[self.get_config_tuple()] = []
+        #         for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]][
+        #             self.remaining_input[0]]:
+        #             self.config_dict[self.get_config_tuple()].append((self.remaining_input[0], push_stack, next_state))
+        #
+        #     # Check for transitions reading 'e'
+        #     if self.remaining_input[0] != 'e' and 'e' in self.pda.transitions[self.current_state][
+        #         self.current_stack[0]]:
+        #         if self.get_config_tuple() not in self.config_dict:
+        #             self.config_dict[self.get_config_tuple()] = []
+        #         for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]]['e']:
+        #             self.config_dict[self.get_config_tuple()].append(('e', push_stack, next_state))
         pass
 
 
@@ -74,10 +101,21 @@ pda = SAPDA(
 
 sapda1_config = SAPDAConfiguration(sapda1, "aabbcc")
 print(sapda1_config.configuration.get_denotation())
+print(sapda1_config.configuration.has_valid_transition())
 
-conjuncts = (('q1', 'Z'), ('q2', 'Z'))
 
-new_config = sapda1_config.configuration.split_leaf('e', conjuncts)
+sapda1_config.configuration.stack = ['a', 'Z']
 
-print(new_config.get_denotation())
-print(new_config.get_active_branches())
+
+conjuncts = (('q2', 'b'), ('q1', 'b'))
+
+new_tree = sapda1_config.configuration.split_leaf('e', conjuncts)
+print(new_tree.get_denotation())
+print(new_tree.has_valid_transition())
+
+
+synch = new_tree.collapse_synchronised_leaves()
+print(synch.get_dict_key())
+
+
+
