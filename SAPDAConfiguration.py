@@ -25,6 +25,8 @@ class SAPDAConfiguration:
             self.configuration = Leaf(self.sapda, [self.sapda.initial_stack_symbol], self.sapda.initial_state,
                                       self.input_string)
 
+        self.update_config_dict()
+
         if isinstance(self.configuration, Leaf):
             self.is_leaf = True
         else:
@@ -33,32 +35,63 @@ class SAPDAConfiguration:
     def is_accepting_config(self):
         return self.is_leaf and self.configuration.remaining_input == 'e' and self.configuration.has_empty_stack()
 
+    def is_rejecting_config(self):
+        for leaf in self.configuration.get_active_branches():
+            if leaf.get_dict_key() not in self.config_dict:
+                return True
+        return False
+
     def update_config_dict(self):
         """
-        Adds current configuration to dictionary if it has a valid transition for each Leaf within it.
-        Dictionary keys: SAPDA configuration (either a single Leaf or a Tree)
+        Add every Leaf in current configuration to dictionary if it has a valid transition.
+        Dictionary keys: SAPDA leaves (denoted as a triple of state, input, stack)
         Dictionary values: List of available transitions, where each transition is a pair (letter to read, conjuncts)
         and conjuncts are pairs of (next state, string to push to stack).
         """
+        for leaf in self.configuration.get_active_branches():
+            if leaf.get_dict_key() not in self.config_dict and leaf.has_valid_transition():
 
-        if self.configuration.get_dict_key() not in self.config_dict and self.configuration.has_valid_transition():
+                # Check for transitions reading the next letter
+                if leaf.remaining_input[0] in self.sapda.transitions[leaf.current_state][leaf.stack[0]]:
+                    self.config_dict[leaf.get_dict_key()] = []
+                    for transition in self.sapda.transitions[leaf.current_state][leaf.stack[0]][
+                        leaf.remaining_input[0]]:
+                        self.config_dict[leaf.get_dict_key()].append((leaf.remaining_input[0], transition))
 
-        #     # Check for transitions reading the next letter
-        #     if self.remaining_input[0] in self.pda.transitions[self.current_state][self.current_stack[0]]:
-        #         self.config_dict[self.get_config_tuple()] = []
-        #         for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]][
-        #             self.remaining_input[0]]:
-        #             self.config_dict[self.get_config_tuple()].append((self.remaining_input[0], push_stack, next_state))
-        #
-        #     # Check for transitions reading 'e'
-        #     if self.remaining_input[0] != 'e' and 'e' in self.pda.transitions[self.current_state][
-        #         self.current_stack[0]]:
-        #         if self.get_config_tuple() not in self.config_dict:
-        #             self.config_dict[self.get_config_tuple()] = []
-        #         for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]]['e']:
-        #             self.config_dict[self.get_config_tuple()].append(('e', push_stack, next_state))
-        pass
+            # Check for transitions reading 'e'
+            if leaf.remaining_input[0] != 'e' and 'e' in self.sapda.transitions[leaf.current_state][leaf.stack[0]]:
+                if leaf.get_dict_key() not in self.config_dict:
+                    self.config_dict[leaf.get_dict_key()] = []
+                for transition in self.sapda.transitions[leaf.current_state][leaf.stack[0]]['e']:
+                    self.config_dict[leaf.get_dict_key()].append(('e', transition))
 
+    def make_step(self, letter, pop_symbol, conjuncts):
+        """
+        Update the configuration by carrying out a given transition.
+        Conjuncts are a tuple of pairs of (next state, push string)
+        """
+        if len(conjuncts) > 1:
+            return 
+        for next_state, push_string in conjuncts:
+            pass
+
+
+    # def run_transition(self, letter, next_state, pop_symbol, push_string):
+    #
+    #     # Update state and read letter
+    #     if letter == 'e':
+    #         self.current_state = next_state
+    #
+    #     elif len(self.remaining_input) == 1:
+    #         self.current_state, self.remaining_input = next_state, 'e'
+    #
+    #     else:
+    #         self.current_state, self.remaining_input = next_state, self.remaining_input[1:]
+    #
+    #     # Update stack
+    #     self.stack_transition(pop_symbol, push_string)
+    #
+    #     self.update_config_dict()
 
 
 # words with equal number of a's, b's and c's
@@ -100,12 +133,13 @@ pda = SAPDA(
 )
 
 sapda1_config = SAPDAConfiguration(sapda1, "aabbcc")
-print(sapda1_config.configuration.get_denotation())
-print(sapda1_config.configuration.has_valid_transition())
+print(sapda1_config.config_dict)
+print(sapda1_config.config_dict[('q0', 'aabbcc', ('Z',))])
 
+for conj in sapda1.transitions['q0']['Z']['e']:
+    print(conj)
 
 sapda1_config.configuration.stack = ['a', 'Z']
-
 
 conjuncts = (('q2', 'b'), ('q1', 'b'))
 
@@ -113,9 +147,6 @@ new_tree = sapda1_config.configuration.split_leaf('e', conjuncts)
 print(new_tree.get_denotation())
 print(new_tree.has_valid_transition())
 
-
-synch = new_tree.collapse_synchronised_leaves()
+synch = new_tree.collapse_synchronised_leaves()[1]
 print(synch.get_dict_key())
-
-
-
+print(synch.get_active_branches())

@@ -81,7 +81,7 @@ class PDAConfiguration:
 
             # Check for transitions reading the next letter
             if self.remaining_input[0] in self.pda.transitions[self.current_state][self.current_stack[0]]:
-            self.config_dict[self.get_config_tuple()] = []
+                self.config_dict[self.get_config_tuple()] = []
                 for next_state, push_stack in self.pda.transitions[self.current_state][self.current_stack[0]][
                     self.remaining_input[0]]:
                     self.config_dict[self.get_config_tuple()].append((self.remaining_input[0], push_stack, next_state))
@@ -285,13 +285,6 @@ pda_config = PDAConfiguration(pda3, 'aaaaaaaabbbb')
 print(pda_config.run_machine())
 
 print(pda_config.config_dict)
-
-firstlist = [1,2,3]
-secondlist = [4,5,6]
-firstlist = firstlist + secondlist
-print(firstlist)
-
-
 
 
 

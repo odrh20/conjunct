@@ -26,6 +26,10 @@ class Structure(ABC):
     def has_valid_transition(self):
         pass
 
+    @abstractmethod
+    def get_active_branches(self):
+        pass
+
 
 # Class for leaf (active) nodes which inherits from the Node class.
 # Leaves are active and need to be processed. They are labelled by a triple of (current state, remaining input, stack).
@@ -46,6 +50,9 @@ class Leaf(Structure):
     def get_dict_key(self):
         return self.current_state, self.remaining_input, tuple(self.stack)
 
+    def get_active_branches(self):
+        return [self]
+
     def has_valid_transition(self):
         return self.current_state in self.sapda.transitions and self.stack[0] in \
                self.sapda.transitions[self.current_state]
@@ -55,6 +62,7 @@ class Leaf(Structure):
 
     def split_leaf(self, letter, conjuncts):
         """
+        Split leaf into a tree for conjunctive transitions (assuming there are at least two conjuncts)
         :param letter: input letter to be read
         :param conjuncts: tuples of (next state, string to push to stack)
         :return: Tree with child Leaves for each conjunct
@@ -81,7 +89,6 @@ class Leaf(Structure):
 
         children = []
         for next_state, push_string in conjuncts:
-
             children.append(Leaf(self.sapda, [push_string], next_state, child_input))
 
         return Tree(self.sapda, internal_stack, children)
@@ -117,9 +124,6 @@ class Tree(Structure):
             child_has_transition.append(child.has_valid_transition())
         return all(child_has_transition)
 
-
-
-
     def __str__(self):
         children_message = ""
         for child in self.children:
@@ -141,7 +145,7 @@ class Tree(Structure):
 
     def collapse_synchronised_leaves(self):
         """
-        Checks whether any sibling leaves in the tree are synchronised, and performs one step of collapsing if so.
+        Checks whether any sibling leaves in the tree are synchronised, and collapses them to make a Leaf.
         Siblings are synchronised if they are all Leaf objects, all have an empty stack, and all have the same
         remaining input and same current state.
         """
@@ -153,16 +157,12 @@ class Tree(Structure):
                         self.children[0].remaining_input and child.current_state == self.children[0].current_state:
                     synchronised_leaves.append(child)
             if len(synchronised_leaves) == len(self.children):
-                return Leaf(self.sapda, self.stack, self.children[0].current_state, self.children[0].remaining_input)
+                return True, Leaf(self.sapda, self.stack, self.children[0].current_state,
+                                  self.children[0].remaining_input)
 
         # If the tree's children are not synchronised, if any of them are Trees then recursively call the function.
         for child in self.children:
             if isinstance(child, Tree):
                 child.collapse_synchronised_leaves()
 
-        return self
-
-
-
-
-
+        return False, self
