@@ -24,18 +24,34 @@ class SAPDAConfiguration:
             # Initialise a single Leaf node
             self.configuration = Leaf(self.sapda, [self.sapda.initial_stack_symbol], self.sapda.initial_state,
                                       self.input_string)
+            self.computation.append(["Configuration: ", self.configuration.get_denotation()])
 
         self.update_config_dict()
 
-        if isinstance(self.configuration, Leaf):
-            self.is_leaf = True
-        else:
-            self.is_leaf = False
+    def update(self, new_config):
+        """
+        Call this function at each step of the computation to update the configuration and append it to the computation
+        """
+        if self.configuration != new_config:
+            self.configuration = new_config
+            self.computation.append(["Configuration: ", self.configuration.get_denotation()])
+            self.update_config_dict()
+            if isinstance(self.configuration, Leaf):
+                self.is_leaf = True
+            else:
+                self.is_leaf = False
 
     def is_accepting_config(self):
+        """
+        Accept if the configuration is a single leaf with no remaining input and empty stack.
+        """
         return self.is_leaf and self.configuration.remaining_input == 'e' and self.configuration.has_empty_stack()
 
     def is_rejecting_config(self):
+        """
+        If any leaf in the current configuration has no valid transition there is no way to reach an accepting
+        configuration, so the input string can be rejected.
+        """
         for leaf in self.configuration.get_active_branches():
             if leaf.get_dict_key() not in self.config_dict:
                 return True
@@ -65,33 +81,58 @@ class SAPDAConfiguration:
                 for transition in self.sapda.transitions[leaf.current_state][leaf.stack[0]]['e']:
                     self.config_dict[leaf.get_dict_key()].append(('e', transition))
 
-    def make_step(self, letter, pop_symbol, conjuncts):
+    def is_deterministic_transition(self):
         """
-        Update the configuration by carrying out a given transition.
-        Conjuncts are a tuple of pairs of (next state, push string)
+        For the current configuration, check if any active branches have a deterministic transition.
         """
-        if len(conjuncts) > 1:
-            return 
-        for next_state, push_string in conjuncts:
-            pass
+        for leaf in self.configuration.get_active_branches():
+            if len(self.config_dict[leaf.get_dict_key()]) == 1:
+                return True
+        return False
 
+    def run_deterministic_transitions(self):
+        """
+        From a given SAPDA configuration, runs transitions as long as there is only one available.
+        Each transition is either an ordinary transition applied to a leaf, a conjunctive transition which splits a
+        leaf into a tree, or collapsing of synchronised sibling leaves.
+        After each transition, the new configuration is appended to the computation.
+        Returns tuple of (Accept, Reject) booleans. If we reach a non-deterministic transition, both are False.
+        """
 
-    # def run_transition(self, letter, next_state, pop_symbol, push_string):
-    #
-    #     # Update state and read letter
-    #     if letter == 'e':
-    #         self.current_state = next_state
-    #
-    #     elif len(self.remaining_input) == 1:
-    #         self.current_state, self.remaining_input = next_state, 'e'
-    #
-    #     else:
-    #         self.current_state, self.remaining_input = next_state, self.remaining_input[1:]
-    #
-    #     # Update stack
-    #     self.stack_transition(pop_symbol, push_string)
-    #
-    #     self.update_config_dict()
+        # Check if in an accepting configuration
+        if self.is_accepting_config():
+            return True, False
+
+        # Check if in a rejecting configuration
+        if self.is_rejecting_config():
+            return False, True
+
+        # Check for synchronised leaves. If synchronisation occurs, call this function again.
+        current_config = self.configuration
+        self.update(self.configuration.synchronise())
+        if not current_config == self.configuration:
+            return self.run_deterministic_transitions()
+
+        # Check if next transition is non-deterministic:
+        if not self.is_deterministic_transition():
+            return False, False
+
+        # If the configuration is a single leaf, run the transition:
+        if self.is_leaf:
+            letter, conjuncts = self.config_dict[self.configuration.get_dict_key()][0]
+            self.update(self.configuration.run_leaf_transition(letter, self.configuration.stack[0], conjuncts))
+            return self.run_deterministic_transitions()
+
+        # If tree, find a leaf within that has a single valid transition and a non-empty stack.
+
+        new_config = self.configuration
+        for i, child in enumerate(self.configuration.children):
+            if isinstance(child, Leaf) and len(self.config_dict[child.get_dict_key()]) == 1 and \
+                    not child.has_empty_stack():
+                letter, conjuncts = self.config_dict[child.get_dict_key()][0]
+                new_config.children[i] = child.run_leaf_transition(letter, child.stack[0], conjuncts)
+                self.update(new_config)
+                return self.run_deterministic_transitions()
 
 
 # words with equal number of a's, b's and c's
@@ -132,21 +173,13 @@ pda = SAPDA(
     initial_stack_symbol='Z'
 )
 
-sapda1_config = SAPDAConfiguration(sapda1, "aabbcc")
-print(sapda1_config.config_dict)
-print(sapda1_config.config_dict[('q0', 'aabbcc', ('Z',))])
+config = SAPDAConfiguration(pda, "aabb")
+print("initial configuration: ", config.configuration.get_denotation())
 
-for conj in sapda1.transitions['q0']['Z']['e']:
-    print(conj)
+print(config.run_deterministic_transitions())
 
-sapda1_config.configuration.stack = ['a', 'Z']
+print("new configuration: ", config.configuration.get_denotation())
 
-conjuncts = (('q2', 'b'), ('q1', 'b'))
+print(config.config_dict)
 
-new_tree = sapda1_config.configuration.split_leaf('e', conjuncts)
-print(new_tree.get_denotation())
-print(new_tree.has_valid_transition())
-
-synch = new_tree.collapse_synchronised_leaves()[1]
-print(synch.get_dict_key())
-print(synch.get_active_branches())
+print(config.computation)

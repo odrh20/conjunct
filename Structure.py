@@ -19,16 +19,23 @@ class Structure(ABC):
         pass
 
     @abstractmethod
-    def get_dict_key(self):
-        pass
-
-    @abstractmethod
     def has_valid_transition(self):
         pass
 
     @abstractmethod
     def get_active_branches(self):
         pass
+
+    @abstractmethod
+    def synchronise(self):
+        pass
+
+    @abstractmethod
+    def run_leaf_transition(self, letter, pop_symbol, conjuncts):
+        pass
+
+
+
 
 
 # Class for leaf (active) nodes which inherits from the Node class.
@@ -37,6 +44,7 @@ class Structure(ABC):
 class Leaf(Structure):
     def __init__(self, sapda, stack, current_state, remaining_input):
         super().__init__(sapda, stack)
+        self.children = None
         self.current_state = current_state
         self.remaining_input = remaining_input
 
@@ -59,6 +67,56 @@ class Leaf(Structure):
 
     def __str__(self):
         return f"Leaf (State: {self.current_state}, Input: {self.remaining_input}, Stack: {self.stack})"
+
+    def run_leaf_transition(self, letter, pop_symbol, conjuncts):
+        """
+        Carry out a given transition on a Leaf.
+        If there is more than one conjunct, it is a conjunctive transition and split_leaf will be called to make a Tree.
+        """
+        if len(conjuncts) > 1:
+            return self.split_leaf(letter, conjuncts)
+
+        next_state, push_string = conjuncts
+        if letter == 'e':
+            self.current_state = next_state
+
+        elif len(self.remaining_input) == 1:
+            self.current_state, self.remaining_input = next_state, 'e'
+
+        else:
+            self.current_state, self.remaining_input = next_state, self.remaining_input[1:]
+
+        # Update stack
+        self.leaf_stack_transition(pop_symbol, push_string)
+
+        return self
+
+    def leaf_stack_transition(self, pop_symbol, push_string):
+        # A PDA stack is given by a list of stack symbols with the top at the head. For any transition, remove
+        # pop_symbol from the head and append each symbol from the push_string to the top in reverse order.
+        # If the push_string is 'e', don't append anything.
+
+        if len(self.stack) == 0:
+            print("Error. Stack already empty")
+            return
+
+        if self.stack[0] != pop_symbol:
+            print("Error. Symbol to pop is not on the stack.")
+            return
+
+        # Pop:
+        if len(self.stack) == 1:
+            self.stack = ['e']
+        else:
+            self.stack = self.stack[1:]
+
+        # Push:
+        if push_string != 'e':
+            for symbol in reversed(push_string):
+                self.stack.insert(0, symbol)
+
+        if len(self.stack) > 1 and self.stack[-1] == 'e':
+            self.stack = self.stack[:-1]
 
     def split_leaf(self, letter, conjuncts):
         """
@@ -93,6 +151,9 @@ class Leaf(Structure):
 
         return Tree(self.sapda, internal_stack, children)
 
+    def synchronise(self):
+        return self
+
 
 # Class for configuration trees, which consist of an internal node (represented by a stack) and
 # at least two children. Children are either trees themselves, or they are leaves.
@@ -110,13 +171,6 @@ class Tree(Structure):
             children_denoted.append(child.get_denotation())
 
         return children_denoted, self.stack
-
-    def get_dict_key(self):
-        children_denoted = []
-        for child in self.children:
-            children_denoted.append(child.get_dict_key())
-
-        return tuple(children_denoted), tuple(self.stack)
 
     def has_valid_transition(self):
         child_has_transition = []
@@ -143,11 +197,21 @@ class Tree(Structure):
                 active_branches += child.get_active_branches()
         return active_branches
 
-    def collapse_synchronised_leaves(self):
+    def run_leaf_transition(self, letter, pop_symbol, conjuncts):
+        """
+        For a given transition, find a leaf in the tree that only has this transition available and return the new
+        tree with this transition applied
+        """
+        return self
+
+    def synchronise(self):
+
         """
         Checks whether any sibling leaves in the tree are synchronised, and collapses them to make a Leaf.
         Siblings are synchronised if they are all Leaf objects, all have an empty stack, and all have the same
         remaining input and same current state.
+        This function will only synchronise a single group of sibling leaves
+        Returns
         """
 
         if isinstance(self.children[0], Leaf) and self.children[0].has_empty_stack():
@@ -157,12 +221,15 @@ class Tree(Structure):
                         self.children[0].remaining_input and child.current_state == self.children[0].current_state:
                     synchronised_leaves.append(child)
             if len(synchronised_leaves) == len(self.children):
-                return True, Leaf(self.sapda, self.stack, self.children[0].current_state,
-                                  self.children[0].remaining_input)
+                return Leaf(self.sapda, self.stack, self.children[0].current_state,
+                            self.children[0].remaining_input)
 
-        # If the tree's children are not synchronised, if any of them are Trees then recursively call the function.
-        for child in self.children:
-            if isinstance(child, Tree):
-                child.collapse_synchronised_leaves()
+        # If the tree's children are not synchronised, if any children are Trees then recursively call the function.
+        for i in range(len(self.children)):
+            if isinstance(self.children[i], Tree):
+                old_tree = self.children[i]
+                self.children[i] = self.children[i].synchronise()
+                if self.children[i] != old_tree:
+                    return self
 
-        return False, self
+        return self
