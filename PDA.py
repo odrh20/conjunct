@@ -280,19 +280,25 @@ pda3 = PDA(
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda3, 'aaaaaaaabbbb')
+pda4 = PDA(
+    states={'q0', 'q1'},
+    input_alphabet={'a', 'b'},
+    stack_alphabet={'Z', 'A', 'B'},
+    transitions={
+        'q0': {'Z': {'a': {('q1', 'AZ')}, 'b': {('q1', 'BZ')}}},
+        'q1': {'Z': {'e': {('q0', 'Z')}}, 'B': {'a': {('q1', 'e')}, 'b': {('q1', 'BB')}}, 'A': {'a': {('q1', 'AA')}, 'b': {('q1', 'e')}}},
+    },
+    initial_state='q0',
+    initial_stack_symbol='Z'
+)
+
+pda_config = PDAConfiguration(pda4, 'abba')
 
 print(pda_config.run_machine())
+print(pda_config.computation)
 
-print(pda_config.config_dict)
 
-my_list = [1,2,3,4,5,6,7,8,9,10]
-
-for index, number in enumerate(my_list):
-    if number % 2 == 0:
-        my_list[index] = 100
-
-print(my_list)
+print('#')
 
 
 
