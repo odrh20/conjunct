@@ -34,16 +34,15 @@ class SAPDAConfiguration:
         Call this function at each step of the computation to update the configuration and append it to the computation
         """
         if self.configuration != new_config:
-            print("got a new config")
             self.configuration = new_config
             self.computation.append(["Configuration: ", self.configuration.get_denotation()])
+            print("COMPUTATION: ", self.computation)
             self.update_config_dict()
             if isinstance(self.configuration, Leaf):
                 self.is_leaf = True
             else:
                 self.is_leaf = False
-        else:
-            print("called update but new_config same as self.config")
+
 
     def is_accepting_config(self):
         """
@@ -56,6 +55,8 @@ class SAPDAConfiguration:
         If all leaves in the current configuration have no valid transition there is no way to reach an accepting
         configuration, so the input string can be rejected.
         """
+        if self.is_accepting_config():
+            return False
         for leaf in self.configuration.get_active_branches():
             if leaf.get_dict_key() in self.config_dict:
                 return False
@@ -78,18 +79,31 @@ class SAPDAConfiguration:
                         leaf.remaining_input[0]]:
                         self.config_dict[leaf.get_dict_key()].append((leaf.remaining_input[0], transition))
 
-            # Check for transitions reading 'e'
-            if leaf.remaining_input[0] != 'e' and 'e' in self.sapda.transitions[leaf.state][leaf.stack[0]]:
-                if leaf.get_dict_key() not in self.config_dict:
-                    self.config_dict[leaf.get_dict_key()] = []
-                for transition in self.sapda.transitions[leaf.state][leaf.stack[0]]['e']:
-                    self.config_dict[leaf.get_dict_key()].append(('e', transition))
+                # Check for transitions reading 'e'
+                print("LEAF STACK: ", leaf.stack)
+                if leaf.remaining_input[0] != 'e' and 'e' in self.sapda.transitions[leaf.state][leaf.stack[0]]:
+                    if leaf.get_dict_key() not in self.config_dict:
+                        self.config_dict[leaf.get_dict_key()] = []
+                    for transition in self.sapda.transitions[leaf.state][leaf.stack[0]]['e']:
+                        self.config_dict[leaf.get_dict_key()].append(('e', transition))
+
+        print("dic: ", self.config_dict)
 
     def order_active_branches(self):
         """
         Returns list of (leaf, number of available transitions) pairs, ordered by fewest available transitions.
         """
-        
+        active_branches = self.configuration.get_active_branches()
+        branch_transitions = []
+        for branch in active_branches:
+            if branch.get_dict_key() not in self.config_dict:
+                print("found an active branch that is not in the config_dict. branch: ", branch.get_denotation())
+            else:
+                branch_transitions.append([branch, len(self.config_dict[branch.get_dict_key()])])
+
+        branch_transitions.sort(key=lambda x: x[1])
+        return branch_transitions
+
     def is_deterministic_transition(self):
         """
         For the current configuration, check if any active branches have a deterministic transition.
@@ -107,6 +121,7 @@ class SAPDAConfiguration:
         After each transition, the new configuration is appended to the computation.
         Returns tuple of (Accept, Reject) booleans. If we reach a non-deterministic transition, both are False.
         """
+        self.order_active_branches()
         # Check for synchronised leaves. If synchronisation occurs, call this function again.
         current_config = self.configuration
         self.update(self.configuration.synchronise())
@@ -119,13 +134,7 @@ class SAPDAConfiguration:
 
         # Check if in a rejecting configuration
         if self.is_rejecting_config():
-            print("rejecting: ", self.configuration.get_denotation())
-            for branch in self.configuration.get_active_branches():
-                print("leaf key: ", branch.get_dict_key())
-            print("current dict: ", self.config_dict)
             return False, True
-
-
 
         # Check if next transition is non-deterministic:
         if not self.is_deterministic_transition():
@@ -134,34 +143,25 @@ class SAPDAConfiguration:
         # If the configuration is a single leaf, run the transition:
         if self.is_leaf:
             letter, conjuncts = self.config_dict[self.configuration.get_dict_key()][0]
-            print("LETTER: ", letter)
-            print("CONJUNCTS: ", conjuncts)
-            print("init config: ", self.configuration)
-            print("init dict: ", self.config_dict)
             self.update(self.configuration.run_leaf_transition(letter, self.configuration.stack[0], conjuncts))
-            print("new config: ", self.configuration)
-            print("new dict: ", self.config_dict)
-            print("Recursively calling run_deterministic_transitions")
-
             return self.run_deterministic_transitions()
 
         # If tree, find a leaf within that has a single valid transition and a non-empty stack.
-        print("Reached tree case")
 
         for i, child in enumerate(self.configuration.children):
             if isinstance(child, Leaf) and child.get_dict_key() in self.config_dict and \
                     len(self.config_dict[child.get_dict_key()]) == 1 and not child.has_empty_stack():
                 letter, conjuncts = self.config_dict[child.get_dict_key()][0]
-                print("tree before: ", self.configuration.get_denotation())
                 new_config = self.configuration.find_leaf_for_transition(child, letter, conjuncts)
                 self.update(new_config)
-                print("tree after: ", self.configuration.get_denotation())
                 return self.run_deterministic_transitions()
-
-
 
     def run_machine(self):
         """Run the machine on input string"""
+
+        for letter in self.input_string:
+            if self.input_string != 'e' and letter not in self.sapda.input_alphabet:
+                return "Word rejected!"
 
         accept, reject = self.run_deterministic_transitions()
 
@@ -171,40 +171,48 @@ class SAPDAConfiguration:
             return "Word rejected!"
 
         # Else we reached a non-deterministic transition. Use backtracking search algorithm.
-        return "non deterministic transition"
-        #return self.search()
+        print("calling search")
+        return self.search()
 
     def search(self, depth=0, path=None):
         if path is None:
             path = []
 
         # Iterate through possible transitions at given configuration
-        for index, (letter, push_string, state) in enumerate(self.config_dict[self.get_config_tuple()]):
+        for leaf, num_transitions in self.order_active_branches():
+            for index, (letter, conjuncts) in enumerate(self.config_dict[leaf.get_dict_key()]):
+                print("i, l, c", index, letter, conjuncts)
 
-            # Make a copy of the NFAConfiguration object in case we need to backtrack later
-            next_self = copy.deepcopy(self)
+                # Make a copy of the SAPDAConfiguration object in case we need to backtrack later
+                next_self = copy.deepcopy(self)
 
-            # In the copy of the dictionary, remove all other transitions from this configuration
-            next_self.config_dict[self.get_config_tuple()] = [(letter, push_string, state)]
-            accept, reject = next_self.run_deterministic_transitions()
+                # In the copy of the dictionary, remove all other transitions from this configuration
+                next_self.config_dict[leaf.get_dict_key()] = [(letter, conjuncts)]
+                print("new dic entry: ", next_self.config_dict[leaf.get_dict_key()])
 
-            if accept:
-                return "Word accepted!", next_self.computation
+                accept, reject = next_self.run_deterministic_transitions()
+                print("depth: ", depth)
+                print("index: ", index)
+                print("num transitions: ", num_transitions)
 
-            if reject:
-                if index + 1 == len(self.config_dict[self.get_config_tuple()]):
-                    if depth == 0:
-                        return "Word rejected!"
-                    else:
-                        # Need to backtrack
-                        tried_letter, tried_push, tried_state, last_current_state, last_current_stack, last_remaining_inp, last_computation, last_dict = path.pop()
-                        last_self = PDAConfiguration(self.pda, self.input_string, last_current_state, last_current_stack, last_remaining_inp, last_computation, last_dict)
-                        last_self.config_dict[last_self.get_config_tuple()].remove((tried_letter, tried_push, tried_state))
-                        return last_self.search(depth - 1, path)
+                if accept:
+                    return "Word accepted!", next_self.computation
 
-            if not (accept or reject):
-                path.append((letter, push_string, state, self.current_state, self.current_stack, self.remaining_input, self.computation, self.config_dict))
-                return next_self.search(depth + 1, path)
+                if reject:
+                    if index + 1 == num_transitions:
+                        if depth == 0:
+                            return "Word rejected!"
+                        else:
+                            # Need to backtrack
+                            print("backtracking")
+                            tried_letter, tried_conjuncts, last_config, last_computation, last_dict = path.pop()
+                            last_self = SAPDAConfiguration(self.sapda, self.input_string, last_computation, last_config, last_dict)
+                            last_self.config_dict[leaf.get_dict_key()].remove((tried_letter, tried_conjuncts))
+                            return last_self.search(depth - 1, path)
+
+                if not (accept or reject):
+                    path.append((letter, conjuncts, self.configuration, self.computation, self.config_dict))
+                    return next_self.search(depth + 1, path)
 
 
 
@@ -274,10 +282,9 @@ pda = SAPDA(
     initial_stack_symbol='Z'
 )
 
-sapda = SAPDAConfiguration(sapda2, 'aaaaabbbbbccccc')
+sapda = SAPDAConfiguration(sapda2, 'aaaabbbbcccc')
 
 print(sapda.run_machine())
-print(sapda.computation)
 
 
 # leaf1 = Leaf(sapda1, ['e'], 'q0', 'abc')

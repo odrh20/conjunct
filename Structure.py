@@ -67,8 +67,8 @@ class Leaf(Structure):
         return [self]
 
     def has_valid_transition(self):
-        return self.state in self.sapda.transitions and self.stack[0] in \
-               self.sapda.transitions[self.state]
+        return self.state in self.sapda.transitions and (not self.has_empty_stack()) and \
+               self.stack[0] in self.sapda.transitions[self.state]
 
     def __str__(self):
         return f"Leaf (State: {self.state}, Input: {self.remaining_input}, Stack: {self.stack})"
@@ -78,53 +78,53 @@ class Leaf(Structure):
         Carry out a given transition on a Leaf.
         If there is more than one conjunct, it is a conjunctive transition and split_leaf will be called to make a Tree.
         """
-        print("conj", conjuncts)
-        print("len" , len(conjuncts))
-        print("letter", letter)
+        self_ = copy.copy(self)
         if len(conjuncts) > 1:
-            return self.split_leaf(letter, conjuncts)
+            return self_.split_leaf(letter, conjuncts)
 
         (next_state, push_string), = conjuncts
         if letter == 'e':
-            self.state = next_state
+            self_.state = next_state
 
-        elif len(self.remaining_input) == 1:
-            self.state, self.remaining_input = next_state, 'e'
+        elif len(self_.remaining_input) == 1:
+            self_.state, self_.remaining_input = next_state, 'e'
 
         else:
-            self.state, self.remaining_input = next_state, self.remaining_input[1:]
+            self_.state, self_.remaining_input = next_state, self_.remaining_input[1:]
 
         # Update stack
-        self.leaf_stack_transition(pop_symbol, push_string)
+        self_ = self_.leaf_stack_transition(pop_symbol, push_string)
 
-        return self
+        return self_
 
     def leaf_stack_transition(self, pop_symbol, push_string):
         # A PDA stack is given by a list of stack symbols with the top at the head. For any transition, remove
         # pop_symbol from the head and append each symbol from the push_string to the top in reverse order.
         # If the push_string is 'e', don't append anything.
 
-        if len(self.stack) == 0:
-            print("Error. Stack already empty")
-            return
+        self_ = copy.copy(self)
 
-        if self.stack[0] != pop_symbol:
-            print("Error. Symbol to pop is not on the stack.")
-            return
+        if len(self_.stack) == 0:
+            return self_
+
+        if self_.stack[0] != pop_symbol:
+            return self_
 
         # Pop:
-        if len(self.stack) == 1:
-            self.stack = ['e']
+        if len(self_.stack) == 1:
+            self_.stack = ['e']
         else:
-            self.stack = self.stack[1:]
+            self_.stack = self_.stack[1:]
 
         # Push:
         if push_string != 'e':
             for symbol in reversed(push_string):
-                self.stack.insert(0, symbol)
+                self_.stack.insert(0, symbol)
 
-        if len(self.stack) > 1 and self.stack[-1] == 'e':
-            self.stack = self.stack[:-1]
+        if len(self_.stack) > 1 and self_.stack[-1] == 'e':
+            self_.stack = self_.stack[:-1]
+
+        return self_
 
     def split_leaf(self, letter, conjuncts):
         """
@@ -133,32 +133,35 @@ class Leaf(Structure):
         :param conjuncts: tuples of (next state, string to push to stack)
         :return: Tree with child Leaves for each conjunct
         """
-        if self.stack == ['e']:
+        self_ = copy.copy(self)
+
+
+        if self_.stack == ['e']:
             print("Error. Trying to split a branch with empty stack.")
             return
 
-        if letter != 'e' and letter != self.remaining_input[0]:
+        if letter != 'e' and letter != self_.remaining_input[0]:
             print("Error. Trying to apply transition with wrong next letter.")
             return
 
-        if len(self.stack) == 1:
+        if len(self_.stack) == 1:
             internal_stack = ['e']
         else:
-            internal_stack = self.stack[1:]
+            internal_stack = self_.stack[1:]
 
         if letter == 'e':
-            child_input = self.remaining_input
-        elif len(self.remaining_input) == 1:
+            child_input = self_.remaining_input
+        elif len(self_.remaining_input) == 1:
             child_input = 'e'
         else:
-            child_input = self.remaining_input[1:]
+            child_input = self_.remaining_input[1:]
 
         children = []
 
         for (next_state, push_string) in conjuncts:
-            children.append(Leaf(self.sapda, [push_string], next_state, child_input))
+            children.append(Leaf(self_.sapda, [push_string], next_state, child_input))
 
-        return Tree(self.sapda, internal_stack, children)
+        return Tree(self_.sapda, internal_stack, children)
 
     def synchronise(self):
         return self
@@ -227,6 +230,7 @@ class Tree(Structure):
         This function will only synchronise a single group of sibling leaves
         Returns
         """
+        self_ = copy.copy(self)
 
         if isinstance(self.children[0], Leaf) and self.children[0].has_empty_stack():
             synchronised_leaves = [self.children[0]]

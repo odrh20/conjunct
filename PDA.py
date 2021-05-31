@@ -190,7 +190,7 @@ class PDAConfiguration:
         # Iterate through possible transitions at given configuration
         for index, (letter, push_string, state) in enumerate(self.config_dict[self.get_config_tuple()]):
 
-            # Make a copy of the NFAConfiguration object in case we need to backtrack later
+            # Make a copy of the PDAConfiguration object in case we need to backtrack later
             next_self = copy.deepcopy(self)
 
             # In the copy of the dictionary, remove all other transitions from this configuration
@@ -292,13 +292,12 @@ pda4 = PDA(
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda4, 'abba')
+pda_config = PDAConfiguration(pda4, 'abbad')
 
 print(pda_config.run_machine())
 print(pda_config.computation)
 
 
-print('#')
 
 
 
