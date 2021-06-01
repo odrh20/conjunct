@@ -64,7 +64,9 @@ class Leaf(Structure):
         return self.state, self.remaining_input, tuple(self.stack)
 
     def get_active_branches(self):
-        return [self]
+        if self.has_valid_transition():
+            return [self]
+        return []
 
     def has_valid_transition(self):
         return self.state in self.sapda.transitions and (not self.has_empty_stack()) and \
@@ -208,7 +210,7 @@ class Tree(Structure):
 
         active_branches = []
         for child in self.children:
-            if isinstance(child, Leaf) and not child.has_empty_stack():
+            if isinstance(child, Leaf) and child.has_valid_transition():
                 active_branches.append(child)
             elif isinstance(child, Tree):
                 active_branches += child.get_active_branches()
