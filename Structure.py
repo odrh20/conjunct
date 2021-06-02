@@ -28,6 +28,10 @@ class Structure(ABC):
         pass
 
     @abstractmethod
+    def get_all_leaves(self):
+        pass
+
+    @abstractmethod
     def synchronise(self):
         pass
 
@@ -37,6 +41,10 @@ class Structure(ABC):
 
     @abstractmethod
     def find_leaf_for_transition(self, leaf, letter, conjuncts):
+        pass
+
+    @abstractmethod
+    def are_synchronised_leaves(self):
         pass
 
 
@@ -68,12 +76,20 @@ class Leaf(Structure):
             return [self]
         return []
 
+    def get_all_leaves(self):
+        return [self]
+
+    def are_synchronised_leaves(self):
+        return False
+
     def has_valid_transition(self):
         return self.state in self.sapda.transitions and (not self.has_empty_stack()) and \
-               self.stack[0] in self.sapda.transitions[self.state]
+               self.stack[0] in self.sapda.transitions[self.state] and \
+               (self.remaining_input[0] in self.sapda.transitions[self.state][self.stack[0]] or
+                'e' in self.sapda.transitions[self.state][self.stack[0]])
 
     def __str__(self):
-        return f"Leaf (State: {self.state}, Input: {self.remaining_input}, Stack: {self.stack})"
+        return str(self.get_denotation())
 
     def run_leaf_transition(self, letter, pop_symbol, conjuncts):
         """
@@ -198,10 +214,16 @@ class Tree(Structure):
         return any(child_has_transition)
 
     def __str__(self):
-        children_message = ""
+        return str(self.get_denotation())
+
+    def get_all_leaves(self):
+        leaves = []
         for child in self.children:
-            children_message += child.__str__()
-        return f"Tree\n(Children: {children_message}, \nStack: {self.stack})"
+            if isinstance(child, Leaf):
+                leaves.append(child)
+            else:
+                leaves += child.get_all_leaves()
+        return leaves
 
     def get_active_branches(self):
         """
@@ -209,11 +231,9 @@ class Tree(Structure):
         """
 
         active_branches = []
-        for child in self.children:
-            if isinstance(child, Leaf) and child.has_valid_transition():
-                active_branches.append(child)
-            elif isinstance(child, Tree):
-                active_branches += child.get_active_branches()
+        for leaf in self.get_all_leaves():
+            if leaf.has_valid_transition():
+                active_branches.append(leaf)
         return active_branches
 
     def run_leaf_transition(self, letter, pop_symbol, conjuncts):
@@ -222,6 +242,25 @@ class Tree(Structure):
         tree with this transition applied
         """
         return self
+
+    def are_synchronised_leaves(self):
+
+        if isinstance(self.children[0], Leaf) and self.children[0].has_empty_stack():
+            synchronised_leaves = [self.children[0]]
+            for child in self.children[1:]:
+                if isinstance(child, Leaf) and child.has_empty_stack() and child.remaining_input == \
+                        self.children[0].remaining_input and child.state == self.children[0].state:
+                    synchronised_leaves.append(child)
+                elif isinstance(child, Tree):
+                    return child.are_synchronised_leaves()
+            if len(synchronised_leaves) == len(self.children):
+                return True
+
+        if isinstance(self.children[0], Tree):
+            return self.children[0].are_synchronised_leaves()
+
+        return False
+
 
     def synchronise(self):
 
@@ -232,27 +271,24 @@ class Tree(Structure):
         This function will only synchronise a single group of sibling leaves
         Returns
         """
-        self_ = copy.copy(self)
+        _self = copy.deepcopy(self)
 
-        if isinstance(self.children[0], Leaf) and self.children[0].has_empty_stack():
-            synchronised_leaves = [self.children[0]]
-            for child in self.children[1:]:
+        if isinstance(_self.children[0], Leaf) and _self.children[0].has_empty_stack():
+            synchronised_leaves = [_self.children[0]]
+            for child in _self.children[1:]:
                 if isinstance(child, Leaf) and child.has_empty_stack() and child.remaining_input == \
-                        self.children[0].remaining_input and child.state == self.children[0].state:
+                        _self.children[0].remaining_input and child.state == _self.children[0].state:
                     synchronised_leaves.append(child)
-            if len(synchronised_leaves) == len(self.children):
-                return Leaf(self.sapda, self.stack, self.children[0].state,
-                            self.children[0].remaining_input)
+            if len(synchronised_leaves) == len(_self.children):
+                return Leaf(_self.sapda, _self.stack, _self.children[0].state,
+                            _self.children[0].remaining_input)
 
         # If the tree's children are not synchronised, if any children are Trees then recursively call the function.
-        for i in range(len(self.children)):
-            if isinstance(self.children[i], Tree):
-                old_tree = self.children[i]
-                self.children[i] = self.children[i].synchronise()
-                if self.children[i] != old_tree:
-                    return self
+        for i in range(len(_self.children)):
+            if isinstance(_self.children[i], Tree):
+                _self.children[i] = _self.children[i].synchronise()
 
-        return self
+        return _self
 
     def find_leaf_for_transition(self, leaf, letter, conjuncts):
         """
