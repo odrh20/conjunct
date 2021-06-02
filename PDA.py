@@ -67,6 +67,10 @@ class PDAConfiguration:
         # A PDA configuration is a triple of (current state, remaining input, stack contents)
         return self.current_state, self.remaining_input, self.current_stack
 
+    def update_computation(self):
+        self.computation.append(self.get_config())
+        return
+
     def get_config_tuple(self):
         return self.current_state, self.remaining_input, tuple(self.current_stack)
 
@@ -142,7 +146,6 @@ class PDAConfiguration:
 
         # Update stack
         self.stack_transition(pop_symbol, push_string)
-
         self.update_config_dict()
 
     def run_deterministic_transitions(self):
@@ -150,7 +153,6 @@ class PDAConfiguration:
         From a given PDA configuration, runs transitions as long as there is only one available.
         Updates the configuration, and returns Accept/Reject booleans.
         """
-
         # Check if in an accepting configuration
         if self.is_accepting_config():
             return True, False
@@ -166,13 +168,15 @@ class PDAConfiguration:
         # Else, run transition, update the configuration and computation, then recurse.
         letter, push_string, state = self.config_dict[self.get_config_tuple()][0]
         self.run_transition(letter, state, self.current_stack[0], push_string)
-        self.computation.append(self.get_config())
+        print("COMP BEFORE RUN TRANS: ", self.computation)
+        self.update_computation()
+        print("COMP AFTER RUN TRANS: ", self.computation)
         return self.run_deterministic_transitions()
 
     def run_machine(self):
         """Run the machine on input string"""
 
-        self.computation.append(self.get_config())
+        self.update_computation()
         accept, reject = self.run_deterministic_transitions()
 
         if accept:
@@ -189,7 +193,6 @@ class PDAConfiguration:
 
         # Iterate through possible transitions at given configuration
         for index, (letter, push_string, state) in enumerate(self.config_dict[self.get_config_tuple()]):
-            print("num of trans: ", len(self.config_dict[self.get_config_tuple()]))
             # Make a copy of the PDAConfiguration object in case we need to backtrack later
             next_self = copy.deepcopy(self)
 
@@ -198,7 +201,8 @@ class PDAConfiguration:
             accept, reject = next_self.run_deterministic_transitions()
 
             if accept:
-                return "Word accepted!", next_self.computation
+                self.computation = next_self.computation
+                return "Word accepted!", self.computation
 
             if reject:
                 if index + 1 == len(self.config_dict[self.get_config_tuple()]):
@@ -292,10 +296,8 @@ pda4 = PDA(
     initial_stack_symbol='Z'
 )
 
-pda_config = PDAConfiguration(pda1, '01111111111111111100')
-
+pda_config = PDAConfiguration(pda1, '0110011001100110')
 print(pda_config.run_machine())
-print(pda_config.computation)
 
 
 
