@@ -302,3 +302,8 @@ print(pda_config.run_machine())
 
 
 
+class Test:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z

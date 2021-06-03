@@ -1,6 +1,7 @@
 # Abstract base class for structure of SAPDA configuration, which is either a Leaf or a Tree.
 import copy
 from abc import ABC, abstractmethod
+from PrintTree import *
 
 
 class Structure(ABC):
@@ -15,9 +16,9 @@ class Structure(ABC):
     def get_denotation(self):
         pass
 
-    @abstractmethod
-    def __str__(self):
-        pass
+    # @abstractmethod
+    # def __str__(self):
+    #     pass
 
     @abstractmethod
     def has_valid_transition(self):
@@ -47,12 +48,24 @@ class Structure(ABC):
     def are_synchronised_leaves(self):
         pass
 
+    @abstractmethod
+    def get_tree_structure(self):
+        pass
+
+    def get_stack_string(self):
+        string = ""
+        for symbol in self.stack:
+            string += symbol
+        return string
 
 
+    @abstractmethod
+    def print_tree(self):
+        pass
 
+# Class for leaf nodes which inherits from the Node class.
+# They are labelled by a triple of (current state, remaining input, stack).
 
-# Class for leaf (active) nodes which inherits from the Node class.
-# Leaves are active and need to be processed. They are labelled by a triple of (current state, remaining input, stack).
 
 class Leaf(Structure):
     def __init__(self, sapda, stack, state, remaining_input):
@@ -88,8 +101,8 @@ class Leaf(Structure):
                (self.remaining_input[0] in self.sapda.transitions[self.state][self.stack[0]] or
                 'e' in self.sapda.transitions[self.state][self.stack[0]])
 
-    def __str__(self):
-        return str(self.get_denotation())
+    # def __str__(self):
+    #     return str(self.get_denotation())
 
     def run_leaf_transition(self, letter, pop_symbol, conjuncts):
         """
@@ -187,6 +200,12 @@ class Leaf(Structure):
     def find_leaf_for_transition(self, leaf, letter, conjuncts):
         return self
 
+    def get_tree_structure(self):
+        return Node((self.state, self.remaining_input, self.get_stack_string()))([])
+
+    def print_tree(self):
+        return drawTree2(False)(False)(self.get_tree_structure())
+
 
 # Class for configuration trees, which consist of an internal node (represented by a stack) and
 # at least two children. Children are either trees themselves, or they are leaves.
@@ -213,8 +232,8 @@ class Tree(Structure):
             child_has_transition.append(child.has_valid_transition())
         return any(child_has_transition)
 
-    def __str__(self):
-        return str(self.get_denotation())
+    # def __str__(self):
+    #     return str(self.get_denotation())
 
     def get_all_leaves(self):
         leaves = []
@@ -303,3 +322,12 @@ class Tree(Structure):
                 child.find_leaf_for_transition(leaf, letter, conjuncts)
 
         return self_
+
+    def get_tree_structure(self):
+        child_nodes = []
+        for child in self.children:
+            child_nodes.append(child.get_tree_structure())
+        return Node(self.get_stack_string())(child_nodes)
+
+    def print_tree(self):
+        return drawTree2(False)(False)(self.get_tree_structure())
