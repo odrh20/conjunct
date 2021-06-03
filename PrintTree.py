@@ -1,4 +1,7 @@
-'''Textually visualized tree, with vertically-centered parent nodes'''
+'''
+Source: https://rosettacode.org/wiki/Visualize_a_tree#Python
+Textually visualized tree, with vertically-centered parent nodes
+'''
 
 from functools import reduce
 from itertools import (chain, takewhile)
