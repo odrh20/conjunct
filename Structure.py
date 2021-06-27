@@ -1,10 +1,13 @@
-# Abstract base class for structure of SAPDA configuration, which is either a Leaf or a Tree.
 import copy
 from abc import ABC, abstractmethod
 from PrintTree import *
 
 
 class Structure(ABC):
+    """
+    Abstract base class for the structure of a SAPDA configuration, which is either a Leaf or a Tree.
+    """
+
     def __init__(self, sapda, stack):
         self.sapda = sapda
         self.stack = stack
@@ -15,10 +18,6 @@ class Structure(ABC):
     @abstractmethod
     def get_denotation(self):
         pass
-
-    # @abstractmethod
-    # def __str__(self):
-    #     pass
 
     @abstractmethod
     def has_valid_transition(self):
@@ -45,10 +44,6 @@ class Structure(ABC):
         pass
 
     @abstractmethod
-    def are_synchronised_leaves(self):
-        pass
-
-    @abstractmethod
     def get_tree_structure(self):
         pass
 
@@ -58,31 +53,60 @@ class Structure(ABC):
             string += symbol
         return string
 
-
     @abstractmethod
     def print_tree(self):
         pass
 
-# Class for leaf nodes which inherits from the Node class.
-# They are labelled by a triple of (current state, remaining input, stack).
+    @abstractmethod
+    def get_tree_depth(self):
+        pass
+
+    @abstractmethod
+    def __eq__(self, other):
+        pass
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Leaf(Structure):
-    def __init__(self, sapda, stack, state, remaining_input):
+    """
+    Class for SAPDA leaves, which are labelled by a triple of (current state, remaining input, stack contents).
+    """
+
+    def __init__(self, sapda, stack, state, remaining_input, internal_stack=None, depth=0):
         super().__init__(sapda, stack)
         self.children = None
         self.state = state
         self.remaining_input = remaining_input
+        if internal_stack is None:
+            self.internal_stack = []
+        else:
+            self.internal_stack = internal_stack
+        self.depth = depth
+
+    def __eq__(self, other):
+
+        if not (isinstance(self, Leaf) and isinstance(other, Leaf)):
+            return False
+        return (self.sapda == other.sapda) and (self.stack == other.stack) and (self.state == other.state) and \
+               (self.remaining_input == other.remaining_input) and (self.internal_stack == other.internal_stack) and \
+               (self.depth == other.depth)
 
     def get_denotation(self):
         """
         The denotation of a Leaf object is a triple of (current state, remaining input, stack)
-
         """
         return self.state, self.remaining_input, self.stack
 
+    def get_tree_structure(self):
+        return Node((self.state, self.remaining_input, self.get_stack_string()))([])
+
+    def get_tree_depth(self):
+        return 0
+
     def get_dict_key(self):
-        return self.state, self.remaining_input, tuple(self.stack)
+        return self.state, self.remaining_input, tuple(self.stack), tuple(self.internal_stack), self.depth
 
     def get_active_branches(self):
         if self.has_valid_transition():
@@ -92,24 +116,19 @@ class Leaf(Structure):
     def get_all_leaves(self):
         return [self]
 
-    def are_synchronised_leaves(self):
-        return False
-
     def has_valid_transition(self):
+
         return self.state in self.sapda.transitions and (not self.has_empty_stack()) and \
                self.stack[0] in self.sapda.transitions[self.state] and \
                (self.remaining_input[0] in self.sapda.transitions[self.state][self.stack[0]] or
                 'e' in self.sapda.transitions[self.state][self.stack[0]])
-
-    # def __str__(self):
-    #     return str(self.get_denotation())
 
     def run_leaf_transition(self, letter, pop_symbol, conjuncts):
         """
         Carry out a given transition on a Leaf.
         If there is more than one conjunct, it is a conjunctive transition and split_leaf will be called to make a Tree.
         """
-        self_ = copy.copy(self)
+        self_ = copy.deepcopy(self)
         if len(conjuncts) > 1:
             return self_.split_leaf(letter, conjuncts)
 
@@ -129,16 +148,20 @@ class Leaf(Structure):
         return self_
 
     def leaf_stack_transition(self, pop_symbol, push_string):
-        # A PDA stack is given by a list of stack symbols with the top at the head. For any transition, remove
-        # pop_symbol from the head and append each symbol from the push_string to the top in reverse order.
-        # If the push_string is 'e', don't append anything.
+        """
+        A SAPDA stack is given by a list of stack symbols with the top at the head. For any transition, remove
+        pop_symbol from the head and append each symbol from the push_string to the top in reverse order.
+        If the push_string is 'e', don't append anything.
+        """
 
-        self_ = copy.copy(self)
+        self_ = copy.deepcopy(self)
 
         if len(self_.stack) == 0:
+            print("LEN STACK IS 0")
             return self_
 
         if self_.stack[0] != pop_symbol:
+            print("FIRST ELEMENT OF STACK NOT POP SYMBOL")
             return self_
 
         # Pop:
@@ -166,7 +189,6 @@ class Leaf(Structure):
         """
         self_ = copy.copy(self)
 
-
         if self_.stack == ['e']:
             print("Error. Trying to split a branch with empty stack.")
             return
@@ -188,9 +210,11 @@ class Leaf(Structure):
             child_input = self_.remaining_input[1:]
 
         children = []
-
         for (next_state, push_string) in conjuncts:
-            children.append(Leaf(self_.sapda, [push_string], next_state, child_input))
+            child_stack = []
+            for symbol in push_string:
+                child_stack.append(symbol)
+            children.append(Leaf(self_.sapda, child_stack, next_state, child_input, internal_stack, self_.depth+1))
 
         return Tree(self_.sapda, internal_stack, children)
 
@@ -198,10 +222,11 @@ class Leaf(Structure):
         return self
 
     def find_leaf_for_transition(self, leaf, letter, conjuncts):
-        return self
-
-    def get_tree_structure(self):
-        return Node((self.state, self.remaining_input, self.get_stack_string()))([])
+        #print("calling find_leaf_for_transition on Leaf object")
+        self_ = copy.deepcopy(self)
+        if leaf not in self.get_active_branches():
+            print("WARNING. CALLED find_leaf_for_transition but the leaf is not the right one")
+        return self_.run_leaf_transition(letter, self_.stack[0], conjuncts)
 
     def print_tree(self):
         return drawTree2(False)(False)(self.get_tree_structure())
@@ -218,6 +243,17 @@ class Tree(Structure):
         self.state = None
         self.remaining_input = None
 
+    def __eq__(self, other):
+        if not (isinstance(self, Tree) and isinstance(other, Tree)):
+            return False
+        if len(self.children) != len(other.children):
+            return False
+        same_check = [self.sapda == other.sapda, self.stack == other.stack]
+        for i in range(len(self.children)):
+            same_check.append(self.children[i] == other.children[i])
+
+        return all(same_check)
+
     def get_denotation(self):
         # Returns denotation of the tree, given by a pair of (list of children (Leaf or Tree), root node)
         children_denoted = []
@@ -228,12 +264,18 @@ class Tree(Structure):
 
     def has_valid_transition(self):
         child_has_transition = []
+
         for child in self.children:
             child_has_transition.append(child.has_valid_transition())
+
+        #print("CHILD HAS TRANSITION: ", child_has_transition)
         return any(child_has_transition)
 
-    # def __str__(self):
-    #     return str(self.get_denotation())
+    def get_tree_depth(self):
+        depths = []
+        for child in self.children:
+            depths.append(child.get_tree_depth())
+        return 1 + max(depths)
 
     def get_all_leaves(self):
         leaves = []
@@ -261,25 +303,6 @@ class Tree(Structure):
         tree with this transition applied
         """
         return self
-
-    def are_synchronised_leaves(self):
-
-        if isinstance(self.children[0], Leaf) and self.children[0].has_empty_stack():
-            synchronised_leaves = [self.children[0]]
-            for child in self.children[1:]:
-                if isinstance(child, Leaf) and child.has_empty_stack() and child.remaining_input == \
-                        self.children[0].remaining_input and child.state == self.children[0].state:
-                    synchronised_leaves.append(child)
-                elif isinstance(child, Tree):
-                    return child.are_synchronised_leaves()
-            if len(synchronised_leaves) == len(self.children):
-                return True
-
-        if isinstance(self.children[0], Tree):
-            return self.children[0].are_synchronised_leaves()
-
-        return False
-
 
     def synchronise(self):
 
@@ -311,17 +334,18 @@ class Tree(Structure):
 
     def find_leaf_for_transition(self, leaf, letter, conjuncts):
         """
-        Given a leaf and transition, finds a leaf in the current tree and carries out transition on this leaf
+        Given a leaf and transition, carries out this transition on any matching leaves in the tree
         """
-        self_ = copy.copy(self)
-        for i, child in enumerate(self_.children):
+
+        new_children = []
+        for child in self.children:
             if child == leaf:
-                self_.children[i] = child.run_leaf_transition(letter, child.stack[0], conjuncts)
-
-            if isinstance(child, Tree):
-                child.find_leaf_for_transition(leaf, letter, conjuncts)
-
-        return self_
+                new_children.append(child.run_leaf_transition(letter, child.stack[0], conjuncts))
+            elif isinstance(child, Leaf):
+                new_children.append(child)
+            elif isinstance(child, Tree):
+                new_children.append(child.find_leaf_for_transition(leaf, letter, conjuncts))
+        return Tree(self.sapda, self.stack, new_children)
 
     def get_tree_structure(self):
         child_nodes = []
