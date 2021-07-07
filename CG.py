@@ -2,10 +2,13 @@
 from prompt_toolkit import print_formatted_text, HTML
 from SAPDA import *
 from Computation import *
+from itertools import chain, combinations
+
 
 
 class CG:
-    def __init__(self, user=False, name=None, terminals=None, variables=None, start_variable=None, rules=None):
+    def __init__(self, user=False, name=None, terminals=None, variables=None, start_variable=None, rules=None,
+                 chars=None):
         """Instantiate Conjunctive Grammar object"""
 
         if user:
@@ -21,6 +24,12 @@ class CG:
             self.terminals = self.set_all_str(terminals)
             self.rules = rules
             self.start_variable = str(start_variable)
+
+        if chars is None:
+            char_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%*+,-./:;<=>?@[]^_`{}~'
+            self.chars = []
+            for char in char_string:
+                self.chars.append(char)
 
     def __eq__(self, other):
         return (self.terminals == other.terminals) and (self.variables == other.variables) and \
@@ -51,6 +60,15 @@ class CG:
         CG_string += self.print_rules()
 
         return CG_string
+
+    def generate_new_variable(self):
+
+        for i in range(len(self.chars)):
+            if self.chars[i] not in self.variables.union(self.terminals):
+                return self.chars.pop(i)
+
+        print("Ran out of chars for new variables!")
+        return
 
     @staticmethod
     def name_CG():
@@ -224,17 +242,20 @@ class CG:
         3) S -> e if S does not appear on the right-hand side of any rules in R
         """
 
-        if ('e', ) in self.rules[self.start_variable]:
-            for variable in self.rules:
-                for expansion in self.rules[variable]:
-                    for conjunct in expansion:
-                        for letter in conjunct:
-                            if letter == self.start_variable:
-                                return False
+        # Check if S appears on the RHS of any rules
+        S_on_RHS = False
+        for variable in self.rules:
+            for expansion in self.rules[variable]:
+                for conjunct in expansion:
+                    for letter in conjunct:
+                        if letter == self.start_variable:
+                            S_on_RHS = True
 
         for variable in self.rules:
             for expansion in self.rules[variable]:
-                if len(expansion) == 1 and expansion[0] in self.terminals:
+                if variable == self.start_variable and expansion == ('e',) and not S_on_RHS:
+                    continue
+                elif len(expansion) == 1 and expansion[0] in self.terminals:
                     continue
                 else:
                     for conjunct in expansion:
@@ -245,10 +266,267 @@ class CG:
 
         return True
 
+    def get_nullable_set(self):
+        """
+        Return set of all variables in the grammar which can generate the empty word.
+        """
+        nullable = set()
+        for variable in self.rules:
+            for expansion in self.rules[variable]:
+                if expansion == ('e',):
+                    nullable.add(variable)
+                    break
+
+        for variable in self.rules:
+            if variable not in nullable:
+                for expansion in self.rules[variable]:
+                    if len(expansion) == 1 and expansion[0] in nullable:
+                        nullable.add(variable)
+                        break
+
+        for variable in self.rules:
+            if variable not in nullable:
+                for expansion in self.rules[variable]:
+                    to_add = True
+                    for conjunct in expansion:
+                        for letter in conjunct:
+                            if letter not in nullable:
+                                to_add = False
+                    if to_add:
+                        nullable.add(variable)
+                        break
+        return nullable
+
+    def get_null_expansions(self, expansion):
+        """
+        Return a list of expansions formed from all possible combinations of removing nullable variables from a given
+        expansion.
+        Generate a list of all indices where a nullable variable appears in the expansion, then generate a power set
+        from this.
+        For each index list in the power set, create a new expansion where the variable at each index is removed.
+        If all characters are removed from a conjunct in the expansion, change the conjunct to 'e' for the empty word.
+        """
+        nullable_indices = []
+        for i in range(len(expansion)):
+            for j in range(len(expansion[i])):
+                if expansion[i][j] in self.get_nullable_set():
+                    nullable_indices.append([i, j])
+        index_powerset = list(chain.from_iterable(combinations(nullable_indices, k)
+                                                  for k in range(1, len(nullable_indices) + 1)))
+        new_expansions = []
+        for indices in index_powerset:
+            new_expansion = []
+            for i in range(len(expansion)):
+                new_conjunct = ''
+                for j in range(len(expansion[i])):
+                    if [i, j] not in indices:
+                        new_conjunct += expansion[i][j]
+                if len(new_conjunct) == 0:
+                    new_conjunct = 'e'
+                new_expansion.append(new_conjunct)
+            new_expansions.append(tuple(new_expansion))
+        return new_expansions
+
+    def remove_e_conjuncts(self):
+        """
+        For each rule in the grammar, add new rules where nullable variables are removed in all combinations.
+        Then, remove any rule containing an e-conjunct.
+        """
+
+        for variable in self.rules:
+            expansion_list = list(self.rules[variable])
+            for expansion in expansion_list:
+                for new_expansion in self.get_null_expansions(expansion):
+                    self.rules[variable].add(new_expansion)
+
+        for variable in self.rules:
+            expansion_list = list(self.rules[variable])
+            for expansion in expansion_list:
+                for conjunct in expansion:
+                    if conjunct == 'e':
+                        self.rules[variable].remove(expansion)
+                        break
+        return
+
+    def get_unit_conjuncts(self):
+        """
+        Return a list of all rules in the grammar containing a unit conjunct.
+        (ie. of the form A -> a1 & ... & a(k-1) & ... & B & a(k+1) & ... & am)
+
+        List contains pairs of (variable, expansion, [unit indices]).
+        """
+        unit_conjuncts = []
+        for variable in self.rules:
+            for expansion in self.rules[variable]:
+                for i in range(len(expansion)):
+                    if expansion[i] in self.variables:
+                        unit_conjuncts.append((variable, expansion, expansion[i], i))
+
+        return unit_conjuncts
+
+    def remove_unit_conjuncts(self):
+        """
+        While list of unit conjuncts is not empty:
+            For each unit conjunct:
+                Delete its rule, and add new rules where the unit conjunct is replaced by all its expansions
+        """
+        while len(self.get_unit_conjuncts()) > 0:
+            variable, expansion, conjunct, index = self.get_unit_conjuncts().pop(0)
+            self.rules[variable].remove(expansion)
+            if variable not in expansion:
+                for c_expansion in self.rules[conjunct]:
+                    # Create a new rule from variable to
+                    new_rule = []
+                    for c in range(len(expansion)):
+                        if c == index:
+                            for c_conj in c_expansion:
+                                new_rule.append(c_conj)
+                        else:
+                            new_rule.append(expansion[c])
+                    self.rules[variable].add(tuple(new_rule))
+        return
+
+    def remove_useless_rules(self):
+        """
+        All conjuncts either have:
+            Type 1: A -> a (a single terminal)
+            Type 2: A -> X, where X is a string of terminals/variables of length at least 2
+        Delete any rule which has conjuncts of both type
+        Then delete any rule that has more than one conjunct consisting of only terminals
+        """
+        for variable in self.rules:
+            expansion_list = list(self.rules[variable])
+            for expansion in expansion_list:
+                has_type_1 = False
+                has_type_2 = False
+                terminal_conjuncts = 0
+                for conjunct in expansion:
+                    if conjunct in self.terminals:
+                        has_type_1 = True
+                    else:
+                        has_type_2 = True
+                    if all(symbol in self.terminals for symbol in conjunct):
+                        terminal_conjuncts += 1
+                if (has_type_1 and has_type_2) or terminal_conjuncts > 1:
+                    self.rules[variable].remove(expansion)
+        return
+
+    def terminals_to_variables(self):
+        """
+        For any terminal found in a rule expansion, create a new variable with a single rule to the terminal.
+        """
+        found_terminals = []
+        rules_to_change = []
+        for variable in self.rules:
+            for expansion in self.rules[variable]:
+                if not (len(expansion) == 1 and expansion[0] in self.terminals):
+                    for conjunct in expansion:
+                        for symbol in conjunct:
+                            if symbol in self.terminals:
+                                if symbol not in found_terminals:
+                                    found_terminals.append(symbol)
+                                if (variable, expansion) not in rules_to_change:
+                                    rules_to_change.append((variable, expansion))
+
+        new_rules = dict()
+        for terminal in found_terminals:
+            new_var = self.generate_new_variable()
+            self.rules[new_var] = {(terminal,)}
+            new_rules[terminal] = new_var
+
+        for variable, expansion in rules_to_change:
+            self.rules[variable].remove(expansion)
+            new_exp = []
+            for conjunct in expansion:
+                new_conjunct = ''
+                for i in range(len(conjunct)):
+                    if conjunct[i] in new_rules:
+                        new_conjunct += new_rules[conjunct[i]]
+                    else:
+                        new_conjunct += conjunct[i]
+                new_exp.append(new_conjunct)
+            self.rules[variable].add(tuple(new_exp))
+        return
+
+    def get_long_conjuncts(self):
+        long_conjuncts = []
+        for variable in self.variables:
+            for expansion in self.rules[variable]:
+                for conjunct in expansion:
+                    if len(conjunct) > 2 and (variable, expansion) not in long_conjuncts:
+                        long_conjuncts.append((variable, expansion))
+        return long_conjuncts
+
+    def split_long_conjuncts(self):
+
+        new_rules = dict()
+        while len(self.get_long_conjuncts()) > 0:
+            for variable, expansion in self.get_long_conjuncts():
+                self.rules[variable].remove(expansion)
+                new_exp = []
+                for conjunct in expansion:
+                    if len(conjunct) > 2:
+                        if conjunct[0:2] not in new_rules:
+                            new_rules[conjunct[0:2]] = self.generate_new_variable()
+                        new_conj = new_rules[conjunct[0:2]] + conjunct[2:]
+                    else:
+                        new_conj = conjunct
+                    new_exp.append(new_conj)
+                self.rules[variable].add(tuple(new_exp))
+
+        for exp, var in new_rules.items():
+            self.rules[var] = {(exp,)}
+
+        return
+
+
+
+
+    def convert_to_BNF(self):
+
+        e_in_language = False
+        if self.start_variable in self.get_nullable_set():
+            e_in_language = True
+
+        print("e in language: ", e_in_language)
+        print(self)
+        print("REMOVING E CONJUNCTS")
+        self.remove_e_conjuncts()
+        print(self)
+        print("REMOVING UNIT CONJUNCTS")
+        print(self.get_unit_conjuncts())
+        self.remove_unit_conjuncts()
+        print(self)
+        print("REMOVING USELESS RULES")
+        self.remove_useless_rules()
+        print(self)
+        print("TERMINALS TO VARIABLES")
+        self.terminals_to_variables()
+        print(self)
+        print("SPLIT LONG CONJUNCTS")
+        self.split_long_conjuncts()
+        print(self)
+
+        if e_in_language:
+            self.rules[self.start_variable].add(('e',))
+            print(self)
+        return
+
+
+
+
+
+
+
+
+
+
+
+
 
 # a^n b^n c^n (n>=0)
 cg1 = CG(
-    name="Words made of blocks of a's, b's and c's of equal length. {a^n b^n c^n | n > 0}",
+    name="Words made of blocks of a's, b's and c's of equal length. {a^n b^n c^n | n >= 0}",
     terminals={'a', 'b', 'c'},
     variables={'S', 'A', 'B', 'C', 'D'},
     start_variable='S',
@@ -303,14 +581,18 @@ cg4 = CG(
     },
 )
 
+# Just for testing
 cg5 = CG(
-    terminals={'a'},
+    terminals={'a', 'b'},
     variables={'S', 'A', 'B'},
     start_variable='S',
     rules={
-        'S': {('A', 'B')},
-        'A': {('e',), ('Aa',)},
-        'B': {('e',), ('Ba',)}
+        'S': {('AB', 'BA'), ('e',)},
+        'A': {('AB',), ('e',)},
+        'B': {('e',)}
     },
 )
 
+
+
+cg4.convert_to_BNF()
