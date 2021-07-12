@@ -26,10 +26,15 @@ class CG:
             self.start_variable = str(start_variable)
 
         if chars is None:
-            char_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%*+,-./:;<=>?@[]^_`{}~'
+            #char_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%*+,-./:;<=>?@[]^_`{}~'
+            upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            lower = 'abcdefghijklmnopqrstuvwxyz'
             self.chars = []
-            for char in char_string:
+            for char in upper:
                 self.chars.append(char)
+            for i in range(1000, 2000):
+                if chr(i) not in (upper+lower):
+                    self.chars.append(chr(i))
 
     def __eq__(self, other):
         return (self.terminals == other.terminals) and (self.variables == other.variables) and \
@@ -65,10 +70,11 @@ class CG:
 
         for i in range(len(self.chars)):
             if self.chars[i] not in self.variables.union(self.terminals):
+                self.variables.add(self.chars[i])
                 return self.chars.pop(i)
 
         print("Ran out of chars for new variables!")
-        return
+        return ""
 
     @staticmethod
     def name_CG():
@@ -173,7 +179,11 @@ class CG:
 
     def print_rules(self):
         rule_list = []
+        variable_list = [self.start_variable]
         for variable in self.rules:
+            if variable not in variable_list:
+                variable_list.append(variable)
+        for variable in variable_list:
             rule_string = variable + "  ⟶   "
             for index, rule in enumerate(self.order_expansions(self.rules[variable])):
                 if index > 0:
@@ -242,7 +252,7 @@ class CG:
         3) S -> e if S does not appear on the right-hand side of any rules in R
         """
 
-        # Check if S appears on the RHS of any rules
+        # Check if start variable appears on the RHS of any rules
         S_on_RHS = False
         for variable in self.rules:
             for expansion in self.rules[variable]:
@@ -262,6 +272,9 @@ class CG:
                         if len(conjunct) == 2 and conjunct[0] in self.variables and conjunct[1] in self.variables:
                             continue
                         else:
+                            print("Conjunct: ", conjunct)
+                            print("Expansion: ", expansion)
+                            print("Variable: ", variable)
                             return False
 
         return True
@@ -386,12 +399,25 @@ class CG:
                     self.rules[variable].add(tuple(new_rule))
         return
 
+    def collapse_equal_conjuncts(self):
+        """
+        Remove any duplicate conjuncts in all the rules.
+        """
+        for variable in self.rules:
+            for expansion in self.rules[variable]:
+                if len(expansion) > 1:
+                    self.rules[variable].remove(expansion)
+                    self.rules[variable].add(tuple(set(expansion)))
+
+
+
     def remove_useless_rules(self):
         """
         All conjuncts either have:
             Type 1: A -> a (a single terminal)
             Type 2: A -> X, where X is a string of terminals/variables of length at least 2
         Delete any rule which has conjuncts of both type
+        Any rule A -> a
         Then delete any rule that has more than one conjunct consisting of only terminals
         """
         for variable in self.rules:
@@ -450,7 +476,7 @@ class CG:
 
     def get_long_conjuncts(self):
         long_conjuncts = []
-        for variable in self.variables:
+        for variable in self.rules:
             for expansion in self.rules[variable]:
                 for conjunct in expansion:
                     if len(conjunct) > 2 and (variable, expansion) not in long_conjuncts:
@@ -476,11 +502,7 @@ class CG:
 
         for exp, var in new_rules.items():
             self.rules[var] = {(exp,)}
-
         return
-
-
-
 
     def convert_to_BNF(self):
 
@@ -488,28 +510,36 @@ class CG:
         if self.start_variable in self.get_nullable_set():
             e_in_language = True
 
-        print("e in language: ", e_in_language)
+        #print("e in language: ", e_in_language)
         print(self)
-        print("REMOVING E CONJUNCTS")
+        #print("REMOVING E CONJUNCTS")
         self.remove_e_conjuncts()
-        print(self)
-        print("REMOVING UNIT CONJUNCTS")
-        print(self.get_unit_conjuncts())
+        #print(self)
+        #print("REMOVING UNIT CONJUNCTS")
+        #print(self.get_unit_conjuncts())
         self.remove_unit_conjuncts()
-        print(self)
-        print("REMOVING USELESS RULES")
+        #print(self)
+        self.collapse_equal_conjuncts()
+        #print("REMOVING USELESS RULES")
         self.remove_useless_rules()
-        print(self)
-        print("TERMINALS TO VARIABLES")
+        #print(self)
+        #print("TERMINALS TO VARIABLES")
         self.terminals_to_variables()
-        print(self)
-        print("SPLIT LONG CONJUNCTS")
+        #print(self)
+        #print("SPLIT LONG CONJUNCTS")
         self.split_long_conjuncts()
-        print(self)
+        #print(self)
 
         if e_in_language:
-            self.rules[self.start_variable].add(('e',))
-            print(self)
+            old_start_var = self.start_variable
+            new_start_var = self.generate_new_variable()
+            self.start_variable = new_start_var
+            self.rules[new_start_var] = {('e',)}
+            for exp in self.rules[old_start_var]:
+                self.rules[new_start_var].add(exp)
+            #print(self)
+        print("\nCONVERTING TO BINARY NORMAL FORM\n")
+        print(self)
         return
 
 
@@ -555,7 +585,7 @@ cg2 = CG(
     },
 )
 
-# wcw w: {a,b} Reduplication with centre marker
+# w$w w: {a,b} Reduplication with centre marker
 cg3 = CG(
     name="Reduplication with centre marker: {w$w | w ∈ {a, b}*}",
     terminals={'a', 'b', '$'},
@@ -587,12 +617,31 @@ cg5 = CG(
     variables={'S', 'A', 'B'},
     start_variable='S',
     rules={
-        'S': {('AB', 'BA'), ('e',)},
-        'A': {('AB',), ('e',)},
-        'B': {('e',)}
+        'S': {('AB',), ('e',)},
+        'A': {('a',)},
+        'B': {('b',)}
+    },
+)
+
+cg6 = CG(
+    terminals={'a'},
+    variables={'A', 'B', 'C', 'D'},
+    start_variable='A',
+    rules={
+        'A': {('AC', 'BB'), ('a',)},
+        'B': {('AA', 'BD'), ('aa',)},
+        'C': {('AB', 'DD'), ('aaa',)},
+        'D': {('AB', 'CC')}
     },
 )
 
 
+# print(cg4.is_in_BNF())
+# cg4.convert_to_BNF()
+# print(cg4.is_in_BNF())
+#
+# print(cg1.chars)
 
-cg4.convert_to_BNF()
+print(cg6)
+
+print(cg6.convert_to_BNF())

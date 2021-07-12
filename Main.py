@@ -1,18 +1,17 @@
 from Computation import *
 from SAPDA import *
 from CG import *
-from Derivation import *
+from Derivation_ import *
 from prompt_toolkit import print_formatted_text, HTML
 
 
 def run():
     try:
         choice = int(input(
-            "\n\nEnter Choice:"
             "\n1. View tutorial."
             "\n2. Make a SAPDA."
             "\n3. Make a Conjunctive Grammar."
-            "\n4. Quit."
+            "\n4. Quit.\n"
             "\nEnter choice : "))
         if choice == 1:
             print("\nWork in progress.\n")
@@ -36,10 +35,10 @@ def run():
 
 def make_sapda():
     try:
-        choice = int(input("\nEnter Choice: "
+        choice = int(input(
                            "\n1. Choose an example SAPDA."
                            "\n2. Design your own SAPDA."
-                           "\n3. Return to start."
+                           "\n3. Return to start.\n"
                            "\nEnter choice : "))
         if choice == 1:
             choose_sapda()
@@ -58,7 +57,7 @@ def make_sapda():
 
 def choose_sapda():
     try:
-        choice = int(input(f"\nEnter Choice: \n1. {sapda1.name} \n2. {sapda2.name} \n"
+        choice = int(input(f"\n1. {sapda1.name} \n2. {sapda2.name} \n"
                            f"3. {sapda3.name} \n4. Return to start.\nEnter choice : "))
 
         sapda = None
@@ -88,9 +87,8 @@ def choose_sapda_action(sapda):
     #print(sapda)
     try:
         choice = int(input(
-            "\nEnter Choice:"
             "\n1. Run the SAPDA on an input string."
-            "\n2. Return to start."
+            "\n2. Return to start.\n"
             "\nEnter choice : "))
 
         if choice == 1:
@@ -112,10 +110,10 @@ def choose_sapda_action(sapda):
 
 def make_CG():
     try:
-        choice = int(input("\nEnter Choice: "
+        choice = int(input(
                            "\n1. Choose an example Conjunctive Grammar."
                            "\n2. Design your own Conjunctive Grammar."
-                           "\n3. Return to start."
+                           "\n3. Return to start.\n"
                            "\nEnter choice : "))
         if choice == 1:
             choose_CG()
@@ -134,8 +132,12 @@ def make_CG():
 
 def choose_CG():
     try:
-        choice = int(input(f"\nEnter Choice: \n1. {cg1.name} \n2. {cg2.name} \n"
-                           f"3. {cg3.name} \n4. Return to start.\nEnter choice : "))
+        choice = int(input(
+                           f"\n1. {cg1.name} \n"
+                           f"2. {cg2.name} \n"
+                           f"3. {cg3.name} \n"
+                           f"4. Return to start.\n"
+                           f"\nEnter choice : "))
 
         cg = None
         if choice == 1:
@@ -163,14 +165,13 @@ def choose_CG():
 def choose_CG_action(cg):
     try:
         choice = int(input(
-            "\nEnter Choice:"
             "\n1. Derivation."
             "\n2. Convert grammar to an equivalent SAPDA."
-            "\n3. Return to start."
+            "\n3. Return to start.\n"
             "\nEnter choice : "))
 
         if choice == 1:
-            input_string = str(input("Enter a derivation string:  "))
+            input_string = str(input("Enter string:  "))
             derivation = Derivation(cg, Word(cg, input_string))
             print(derivation.get_derivation())
             choose_CG_action(cg)
