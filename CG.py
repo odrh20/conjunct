@@ -623,7 +623,9 @@ cg5 = CG(
     },
 )
 
+
 cg6 = CG(
+    name="Strings of a's with power of 4 lengths. a^(4n)",
     terminals={'a'},
     variables={'A', 'B', 'C', 'D'},
     start_variable='A',
@@ -636,6 +638,7 @@ cg6 = CG(
 )
 
 
+
 # print(cg4.is_in_BNF())
 # cg4.convert_to_BNF()
 # print(cg4.is_in_BNF())
@@ -645,3 +648,4 @@ cg6 = CG(
 print(cg6)
 
 print(cg6.convert_to_BNF())
+

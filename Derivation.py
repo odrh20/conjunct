@@ -2,6 +2,8 @@ import copy
 import random
 from CG import *
 from Word import *
+import sys
+sys.setrecursionlimit(10**6)
 
 
 

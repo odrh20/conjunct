@@ -1,7 +1,8 @@
 """
 Class for words in a CYK Parser derivation, used in constructing derivations from a given recognition matrix.
 """
-import copy
+import sys
+sys.setrecursionlimit(10**6)
 
 
 class Word:
@@ -17,15 +18,14 @@ class Word:
         """
         if variable_tracker is None:
             self.variable_tracker = [(self.grammar.start_variable, (0, len(self.target_word) - 1))]
+        else:
+            self.variable_tracker = variable_tracker
 
     def __str__(self):
         return self.current_word
 
     def __eq__(self, other):
         return self.current_word == other.current_word
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def update_variable_tracker(self, node):
         if self.variable_tracker[0][0] != node.variable:
@@ -40,17 +40,9 @@ class Word:
         self.variable_tracker = new_variables + self.variable_tracker
 
     def get_var_index_pos(self):
-        print("current word: ", self.current_word)
-        print("variable tracker: ", self.variable_tracker)
         var, pos = self.variable_tracker[0]
         index = self.current_word.find(var)
         return var, index, pos
-
-    def set_word(self, word):
-        if len(word) == 0:
-            self.current_word = 'e'
-        else:
-            self.current_word = word
 
     def replace_word_section(self, new_string, start, end):
         """
@@ -62,8 +54,7 @@ class Word:
         for i in range(len(new_word)):
             if (new_word[i] == '(' and new_word[i+1] == '&') or (new_word[i] == '&' and new_word[i+1] == ')'):
                 new_word = new_word[:i+1] + 'e' + new_word[i+1:]
-        self.set_word(new_word)
-        return
+        return Word(self.grammar, new_word, self.target_word, self.variable_tracker)
 
     def apply_rule(self, variable, expansion, index):
         """
@@ -71,7 +62,6 @@ class Word:
         eg. Variable = A, Conjuncts = (a1, a2), Index = 1
         xAyA => x(a1 & a2)yA
         """
-        self_ = copy.deepcopy(self)
         if self.current_word[index] != variable:
             return "Error. Variable not found at given index in word."
 
@@ -83,9 +73,9 @@ class Word:
                 new_string += conjunct
         new_string += ")"
 
-        self_.replace_word_section(new_string, index, index+len(variable))
-        derivation = [(self_, self_.grammar.print_rule(variable, expansion), [index])]
-        reduce_list = self_.reduce_conjuncts()
+        new_word = self.replace_word_section(new_string, index, index+len(variable))
+        derivation = [(new_word, self.grammar.print_rule(variable, expansion), [index])]
+        reduce_list = new_word.reduce_conjuncts()
         if len(reduce_list) > 0:
             derivation += reduce_list
         return derivation
@@ -116,16 +106,15 @@ class Word:
             return derivation
 
         # If we have found brackets, investigate what is inside them.
-        self_ = copy.deepcopy(self)
         inside_brackets = self.current_word[open_bracket+1:close_bracket]
 
         conjuncts = inside_brackets.split('&')
 
         terminal_conjunct = all(letter in self.grammar.terminals for letter in conjuncts[0])
         if (terminal_conjunct or conjuncts[0] == 'e') and len(set(conjuncts)) == 1:  # Then we need to reduce them
-            self_.replace_word_section(conjuncts[0], open_bracket, close_bracket+1)
-            derivation.append((self_, "Reduce conjuncts", [open_bracket, close_bracket]))
-            return self_.reduce_conjuncts(derivation=derivation)
+            new_word = self.replace_word_section(conjuncts[0], open_bracket, close_bracket+1)
+            derivation.append((new_word, "Reduce conjuncts", [open_bracket, close_bracket]))
+            return new_word.reduce_conjuncts(derivation=derivation)
 
         # Recursively call function on remainder of string.
-        return self_.reduce_conjuncts(start=open_bracket+1, derivation=derivation)
+        return self.reduce_conjuncts(start=open_bracket+1, derivation=derivation)

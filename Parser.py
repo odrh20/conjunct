@@ -4,7 +4,8 @@ from CG import *
 import numpy as np
 import pandas as pd
 from tabulate import tabulate
-
+import sys
+sys.setrecursionlimit(10**6)
 
 large_width = 400
 np.set_printoptions(linewidth=large_width)
@@ -211,17 +212,9 @@ class Node:
     # def __hash__(self):
     #     return hash((self.i, self.j, self.variable, tuple(self.pointers)))
 
-p = Parser(cg6, 'aaaa')
+p = Parser(cg6, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
 p.compute_diagonal()
-#print(p)
-
-# pointers = p.get_possible_pointers(p.table[0,0], p.table[1,1])
-# # print(pointers)
-# nodes = p.get_node_set(pointers, 0, 1)
-# print(nodes)
-# for node in nodes:
-#     print(node.get_expansion())
 
 p.populate_table()
 
