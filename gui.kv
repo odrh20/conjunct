@@ -1,0 +1,701 @@
+#:import CG CG.CG
+#:import Parser Parser.Parser
+#:import Computation Computation.Computation
+#:import Factory kivy.factory.Factory
+#:import ObjectProperty kivy.properties.ObjectProperty
+#:import StringProperty kivy.properties.StringProperty
+
+
+
+WindowManager:
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    StartWindow:
+    CGWindow:
+    SAPDAWindow:
+    ChooseCGWindow:
+    ChooseSAPDAWindow:
+    ChooseCGActionWindow:
+    ChooseSAPDAActionWindow:
+    CYKParseWindow:
+    GenerateParseWindow:
+
+
+<RoundedButton@Button>:
+    background_normal: ''
+    background_color: (0,0,0,0)
+    size_hint: (.8, .4)
+    pos_hint: {'center_x': 0.5}
+    markup: True
+    font_name: "DejaVuSans.ttf"
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50]
+
+<ReturnStartButton@Button>:
+    background_normal: ''
+    background_color: (0,0,0,0)
+    text: "Return to start"
+    font_name: "DejaVuSans.ttf"
+    font_size: 32
+    pos_hint: {"x": 0.83, "top": 1}
+    size_hint: (.15, .1)
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [40]
+
+<BackButton@Button>:
+    background_normal: ''
+    background_color: (0,0,0,0)
+    text: "Back"
+    font_name: "DejaVuSans.ttf"
+    font_size: 32
+    pos_hint: {"x": 0.02, "top": 1}
+    size_hint: (.15, .1)
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [40]
+
+<RoundedLabel@Label>:
+    background_normal: ''
+    background_color: (0,0,0,0)
+    markup: True
+    size_hint: (.8, None)
+    text_size: root.width, None
+    size: self.texture_size
+    pos_hint: {'center_x': 0.5}
+    padding:[30,20]
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50]
+
+
+<DerivationLabel@Label>:
+    background_normal: ''
+    background_color: (0,0,0,0)
+    markup: True
+    font_name: 'DejaVuSans.ttf'
+    size: self.texture_size
+    pos_hint: {'center_x': 0.5}
+    padding:[30,30]
+    text_size: None, None
+    #halign: 'right'
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [50]
+
+
+
+<StartWindow>:
+    name: "start"
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        spacing:100
+        padding:70
+
+        Label:
+            text: "Conjunctive Grammar & SAPDA Machine"
+            font_size: 75
+
+        RoundedButton:
+            text: "Conjunctive Grammars"
+            font_size: 64
+            on_release:
+                app.root.current = "cg"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: "SAPDA"
+            font_size: 64
+            on_release:
+                app.root.current = "sapda"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: "Tutorial"
+            font_size: 64
+
+
+<CGWindow>:
+    name: "cg"
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        spacing:100
+        padding:50
+
+        Label:
+            text: "Conjunctive Grammars"
+            font_size: 64
+
+        RoundedButton:
+            text: "Help"
+            # pos_hint: {"x", "y", "top", "bottom", "left", "right"}
+            font_size: 64
+            # on_release:
+            #     app.root.current = "first"
+            #     root.manager.transition.direction = "right"
+
+        RoundedButton:
+            text: "Choose an example grammar"
+            font_size: 64
+            on_release:
+                app.root.current = "choose_cg"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: "Make your own grammar"
+            font_size: 64
+            # on_release:
+            #     app.root.current = "first"
+            #     root.manager.transition.direction = "right"
+
+
+
+<SAPDAWindow>:
+    name: "sapda"
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        spacing:100
+        padding:50
+
+        Label:
+            text: "SAPDA"
+            font_size: 64
+
+        RoundedButton:
+            text: "Help"
+            font_size: 64
+            # on_release:
+            #     app.root.current = "first"
+            #     root.manager.transition.direction = "right"
+
+        RoundedButton:
+            text: "Choose an example SAPDA"
+            font_size: 64
+            on_release:
+                app.root.current = "choose_sapda"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: "Make your own SAPDA"
+            font_size: 64
+            # on_release:
+            #     app.root.current = "first"
+            #     root.manager.transition.direction = "right"
+
+
+
+<ChooseCGWindow>:
+    name: "choose_cg"
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton
+            on_release:
+                app.root.current = "cg"
+                root.manager.transition.direction = "right"
+
+
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        spacing:100
+        padding:50
+
+        Label:
+            text: "Choose an example grammar"
+            font_size: 64
+
+        RoundedButton:
+            text: app.cg1.name
+            font_size: 32
+            on_release:
+                app.my_cg = app.cg1
+                app.root.current = "choose_cg_action"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: app.cg2.name
+            font_size: 32
+            on_release:
+                app.my_cg = app.cg2
+                app.root.current = "choose_cg_action"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: app.cg3.name
+            font_size: 32
+            on_release:
+                app.my_cg = app.cg3
+                app.root.current = "choose_cg_action"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: app.cg4.name
+            font_size: 32
+            on_release:
+                app.my_cg = app.cg4
+                app.root.current = "choose_cg_action"
+                root.manager.transition.direction = "left"
+
+
+
+<ChooseSAPDAWindow>:
+    name: "choose_sapda"
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton
+            on_release:
+                app.root.current = "sapda"
+                root.manager.transition.direction = "right"
+
+    BoxLayout:
+        orientation: "vertical"
+        size: root.width, root.height
+        spacing:100
+        padding:50
+
+        Label:
+            text: "Choose an example SAPDA"
+            font_size: 64
+
+        RoundedButton:
+            text: app.sapda1.name
+            font_size: 32
+            on_release:
+                app.my_sapda = app.sapda1
+                app.root.current = "choose_sapda_action"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: app.sapda2.name
+            font_size: 32
+            on_release:
+                app.my_sapda = app.sapda2
+                app.root.current = "choose_sapda_action"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: app.sapda3.name
+            font_size: 32
+            on_release:
+                app.my_sapda = app.sapda3
+                app.root.current = "choose_sapda_action"
+                root.manager.transition.direction = "left"
+
+
+
+<ChooseCGActionWindow>:
+    name: "choose_cg_action"
+    spacing:20
+    padding:20
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton
+            on_release:
+                app.root.current = "choose_cg"
+                root.manager.transition.direction = "right"
+
+
+
+        RoundedButton:
+            text: "Apply CYK algorithm for parsing"
+            font_size: 32
+            pos_hint: {'x':0.1 , 'y':.05}
+            size_hint: (.36, .15)
+            width: self.texture_size[0]
+            on_release:
+                app.my_bnf_cg = app.my_cg.convert_to_BNF()
+                app.root.current = "cyk_parse"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            text: "Convert grammar to equivalent SAPDA"
+            font_size: 32
+            pos_hint: {'x':0.5 , 'y':.05}
+            size_hint: (.4, .15)
+            width: self.texture_size[0]
+
+
+    ScrollView:
+        size_hint_y: .60
+        pos_hint: {'x':0 , 'y':.25}
+        do_scroll_x: False
+        do_scroll_y: True
+
+
+        GridLayout:
+
+            size: root.width, root.height
+            size_hint_x: None
+            size_hint_y: None
+            cols: 1
+            height: self.minimum_height
+            spacing:40
+            padding:40
+
+            RoundedLabel:
+                text: str(app.my_cg)
+                pos_hint: {'x':0.1 , 'top':.85}
+
+<CYKFailPopup@Popup>
+    auto_dismiss: True
+    size_hint: 0.5, 0.2
+    title: "Derivation failed"
+    on_dismiss:
+        app.my_parser = ObjectProperty(None)
+
+<CYKSuccessPopup@Popup>
+    spacing:50
+    padding:50
+    auto_dismiss: True
+    size_hint: 0.9, 0.9
+    title: "Derivation successful!"
+    on_dismiss:
+        app.my_parser = ObjectProperty(None)
+
+    BoxLayout:
+
+        RecycleView:
+            id: rv
+            viewclass: 'DerivationLabel'
+            data: [{'text': str(x)} for x in app.my_derivation] if app.my_derivation else [{'text': str(x)} for x in range(20)]
+            RecycleGridLayout:
+                cols: 1
+                spacing:40
+                padding:10
+                size_hint: None, None
+                pos_hint: {'top' : 0.95}
+                #default_size: None, dp(20)
+                #default_size_hint: 1, None
+                height: self.minimum_height
+                width: self.minimum_width
+        Slider:
+            size_hint_x: None
+            width: root.width*0.1
+            id: slider
+            min: 0
+            max: 1
+            orientation: 'vertical'
+            value: rv.scroll_y
+            on_value: rv.scroll_y = self.value
+
+
+
+<CYKParseWindow>:
+    name: "cyk_parse"
+    spacing:20
+    padding:20
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton
+            on_release:
+                app.root.current = "choose_cg_action"
+                root.manager.transition.direction = "right"
+
+        RoundedLabel:
+            text: 'Converting to Binary Normal Form'
+            pos_hint: {'center_x':0.5 , 'y':0.87}
+            size_hint: (.35, .10)
+            halign: 'center'
+
+    ScrollView:
+        size_hint_y: .60
+        pos_hint: {'x':0 , 'y':.25}
+        do_scroll_x: False
+        do_scroll_y: True
+
+
+        GridLayout:
+
+            size: root.width, root.height
+            size_hint_x: None
+            size_hint_y: None
+            cols: 1
+            height: self.minimum_height
+            spacing:40
+            padding:40
+
+            RoundedLabel:
+                text: str(app.my_bnf_cg)
+                pos_hint: {'x':0.1 , 'top':.85}
+
+    GridLayout:
+
+        size: root.width, root.height
+        size_hint_x: None
+        size_hint_y: None
+        cols: 3
+        rows: 1
+        height: self.minimum_height
+        spacing:40
+        padding:40
+
+        RoundedLabel:
+            text: "Enter string: "
+            pos_hint: {'x':0.1 , 'top':.25}
+            size_hint_x: 0.22
+            halign: "right"
+
+        TextInput:
+            id: input_str
+            text: ""
+            halign: "left"
+            multiline: False
+
+        RoundedButton:
+            text: "Parse"
+            size_hint_x: 0.17
+            on_release:
+                if input_str.text == "": app.input_string = "e"
+                else: app.input_string = str(input_str.text)
+
+                app.my_parser = Parser(app.my_bnf_cg, app.input_string)
+                if app.my_parser.recognise_word(): app.my_derivation = app.my_parser.find_parse()
+                if app.my_parser.recognise_word(): Factory.CYKSuccessPopup().open()
+                else: Factory.CYKFailPopup().open()
+                input_str.text = ""
+
+
+
+
+
+<ChooseSAPDAActionWindow>:
+    name: "choose_sapda_action"
+    spacing:50
+    padding:20
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton
+            on_release:
+                app.root.current = "choose_sapda"
+                root.manager.transition.direction = "right"
+
+        RoundedButton:
+            text: "Run SAPDA on input string"
+            font_size: 32
+            pos_hint: {'center_x':0.5 , 'y':0.05}
+            size_hint: (.4, .15)
+            width: self.texture_size[0]
+
+
+    ScrollView:
+        size_hint_y: .60
+        pos_hint: {'x':0 , 'y':.25}
+        do_scroll_x: False
+        do_scroll_y: True
+
+
+        GridLayout:
+
+            size: root.width, root.height
+            size_hint_x: None
+            size_hint_y: None
+            cols: 1
+            height: self.minimum_height
+            spacing:40
+            padding:40
+
+            RoundedLabel:
+                id: rl
+                size_hint_y: None
+                pos_hint: {'x':0.1 , 'top':.80}
+                text_size: self.width, None
+                height: self.texture_size[1]
+                text: str(app.my_sapda)
+
+    GridLayout:
+
+        size: root.width, root.height
+        size_hint_x: None
+        size_hint_y: None
+        cols: 3
+        rows: 1
+        height: self.minimum_height
+        spacing:40
+        padding:40
+
+        RoundedLabel:
+            text: "Enter string: "
+            pos_hint: {'x':0.1 , 'top':.25}
+            size_hint_x: 0.22
+            halign: "right"
+
+        TextInput:
+            id: input_str
+            text: ""
+            halign: "left"
+            multiline: False
+
+        RoundedButton:
+            text: "Compute"
+            size_hint_x: 0.2
+            on_release:
+                if input_str.text == "": app.input_string = "e"
+                else: app.input_string = str(input_str.text)
+
+                app.my_computation = Computation(app.my_sapda, app.input_string).run_machine()
+                Factory.SAPDASuccessPopup().open()
+
+                #if app.my_parser.recognise_word(): app.my_derivation = app.my_parser.find_parse()
+                #if app.my_parser.recognise_word(): Factory.CYKSuccessPopup().open()
+                #else: Factory.CYKFailPopup().open()
+                input_str.text = ""
+
+
+<SAPDASuccessPopup@Popup>
+    spacing:50
+    padding:50
+    auto_dismiss: True
+    size_hint: 0.9, 0.9
+    title: "Computation successful!"
+    #on_dismiss:
+#        app.my_computation = ListProperty(None)
+
+    BoxLayout:
+
+        RecycleView:
+            id: rv
+            viewclass: 'DerivationLabel'
+            data: [{'text': str(x)} for x in app.my_computation] if app.my_computation else [{'text': str(x)} for x in range(20)]
+            RecycleGridLayout:
+                cols: 1
+                spacing:40
+                padding:10
+                size_hint: None, None
+                pos_hint: {'top' : 0.95}
+                #default_size: None, dp(20)
+                #default_size_hint: 1, None
+                height: self.minimum_height
+                width: self.minimum_width
+        Slider:
+            size_hint_x: None
+            width: root.width*0.1
+            id: slider
+            min: 0
+            max: 1
+            orientation: 'vertical'
+            value: rv.scroll_y
+            on_value: rv.scroll_y = self.value

@@ -2,30 +2,25 @@ from Derivation import *
 from Word import *
 from CG import *
 import numpy as np
-import pandas as pd
 from tabulate import tabulate
 import sys
 sys.setrecursionlimit(10**6)
 
 large_width = 400
 np.set_printoptions(linewidth=large_width)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
 
 
 class Parser:
 
-    def __init__(self, grammar, word, table=None):
+    def __init__(self, grammar, word):
         self.grammar = grammar
-        self.grammar.convert_to_BNF()
-        self.word = word
-        self.n = len(self.word)
-        if table is None:
-            self.table = np.empty([self.n, self.n], dtype=set)
+        if len(word) == 0:
+            self.word = 'e'
         else:
-            self.table = table
+            self.word = word
+        self.n = len(self.word)
+        self.table = np.empty([self.n, self.n], dtype=set)
+        self.populate_table()
 
     def join_nodes(self, node_1, node_2):
         """
@@ -80,9 +75,11 @@ class Parser:
         self.populate_table()
         print(self)
 
-        return self.grammar.start_variable in self.table[0, self.n-1]
+        return any(node.variable == self.grammar.start_variable for node in self.table[0, self.n-1])
 
     def populate_table(self):
+        print("Populating the CYK recognition matrix.\n"
+              "Look at the top-right cell. If the start variable is there, then the string is recognised.\n")
         self.compute_diagonal()
 
         for k in range(self.n):
@@ -93,8 +90,6 @@ class Parser:
                     new_nodes = self.get_possible_pointers(self.table[i, m], self.table[m+1, j])
                     node_set = node_set.union(new_nodes)
                     self.table[i, j] = self.get_node_set(node_set, i, j)
-                    #print(f"Updating table at index {i,j}")
-                    #self.table[i, j] = self.f(R)
 
         for node in list(self.table[0, self.n-1]):
             if node.variable != self.grammar.start_variable:
@@ -109,10 +104,10 @@ class Parser:
                     new_node.update_pointers(self.word[i], None, None)
                     self.table[i, i].add(new_node)
 
-    def __str__(self):
-        """
-        Uses tabulate to generate a recognition matrix for printing.
-        """
+    def get_matrix(self):
+
+        self.populate_table()
+
         data = copy.deepcopy(self.table)
 
         for i in range(self.n):
@@ -125,8 +120,31 @@ class Parser:
         data = np.where(data is None, '', data)
         data = np.where(data == set(), '{}', data)
 
-        #return tabulate(data, headers=[('\033[91m' + letter + '\033[0m') for letter in self.word], tablefmt='psql')
+        if self.grammar.start_variable in data[0, self.n - 1]:
+            data[0, self.n - 1] = '\033[92m' + str(data[0, self.n - 1]) + '\033[0m'
 
+        else:
+            data[0, self.n - 1] = '\033[91m' + str(data[0, self.n - 1]) + '\033[0m'
+
+        return tabulate(data, headers=[('\033[91m' + letter + '\033[0m') for letter in self.word], tablefmt='psql')
+
+    def __str__(self):
+        """
+        Uses tabulate to generate a recognition matrix for printing.
+        """
+        self.populate_table()
+
+        data = copy.deepcopy(self.table)
+
+        for i in range(self.n):
+            for j in range(self.n):
+                if data[i, j] is not None and len(data[i, j]) > 0:
+                    for node in data[i, j]:
+                        data[i, j].remove(node)
+                        data[i, j].add(str(node))
+
+        data = np.where(data is None, '', data)
+        data = np.where(data == set(), '{}', data)
 
         if self.grammar.start_variable in data[0, self.n - 1]:
             data[0, self.n - 1] = '\033[92m' + str(data[0, self.n - 1]) + '\033[0m'
@@ -136,7 +154,7 @@ class Parser:
 
         return tabulate(data, headers=[('\033[91m' + letter + '\033[0m') for letter in self.word], tablefmt='psql')
 
-    def find_parse(self, d=None):
+    def find_parse(self):
         """
         From a completed recognition matrix, start in the top-right corner with the start variable and work towards
         the diagonal to find a derivation path.
@@ -144,30 +162,23 @@ class Parser:
         The latest word is a Word object which contains an index dictionary, keeping track of the current position of
         each variable.
         """
-        if d is None:  # Initialise a new derivation.
-            d = Derivation(self.grammar, self.word)
-        #print(d.derivation)
+        if self.word == 'e':  # Special case when the word is empty
+            return [f'[color=ff3333]{self.grammar.start_variable}[/color]', '[color=40ff00]e[/color]']
+        # Initialise a new derivation.
+        d = Derivation(self.grammar, self.word)
 
-        #latest_word = d.get_latest_word()  # latest Word object in derivation
-        #active_var, idx, (i, j) = latest_word.get_var_index_pos()  # First variable in current word, to do rule step
-
-        #return active_var, idx, i, j
-        # i, j = latest_word.get_matrix_position(i)  # Position in matrix of active variable.
-        #
         while d.get_latest_word().current_word != self.word:
             active_var, idx, (i, j) = d.get_latest_word().get_var_index_pos()
             for node in self.table[i, j]:
                 if node.variable == active_var:
                     expansion = node.get_expansion()
-                    #print("expansion: ", expansion)
                     d.derivation += d.get_latest_word().apply_rule(active_var, expansion, idx)
                     d.get_latest_word().update_variable_tracker(node)
-                    #print(d.get_latest_word())
+
+        return d.get_derivation_list()
 
 
-        #
-        return d.print_derivation()
-        #return str(d)
+
 
 """
 Cells in a recognition matrix contain sets of Node objects.
@@ -199,25 +210,15 @@ class Node:
     def __repr__(self):
         return self.variable
 
-        # print_string = self.variable
-        # for ele in self.pointers:
-        #     print_string += str(ele)
-        # return print_string
+#
+p = Parser(cg1.convert_to_BNF(), 'e')
 
-    # def __eq__(self, other):
-    #     if isinstance(other, Node):
-    #         return self.i == other.i and self.j == other.j and self.variable == other.variable and self.pointers == \
-    #             other.pointers
-    #
-    # def __hash__(self):
-    #     return hash((self.i, self.j, self.variable, tuple(self.pointers)))
 
-p = Parser(cg6, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-
-p.compute_diagonal()
-
-p.populate_table()
-
-print(p)
-
+# if p.recognise_word():
+#     print("Recognise word")
+#     print(p.find_parse())
+#
+#
+#
+#
 print(p.find_parse())

@@ -37,6 +37,13 @@ class Computation:
             print((self.computation[i]).print_tree(), "\n", "\n")
         return ""
 
+    def get_computation_list(self):
+        comp_list = []
+        for i in range(len(self.computation)):
+            step = f"Step {i+1} \n{self.computation[i].print_tree()}"
+            comp_list.append(step)
+        return comp_list
+
     def update(self, new_config):
         """
         Call this function at each step of the computation to update the configuration and append it to the computation.
@@ -271,7 +278,7 @@ class Computation:
 
         if accept:
             print("Word accepted!\n")
-            return self.print_computation()
+            return self.get_computation_list()
 
         if reject:
             return "Word rejected!"
@@ -280,7 +287,7 @@ class Computation:
         print("\nLooking for solution...\n")
         #print("Current config: ", self.configuration.get_denotation())
         try:
-            return self.bfs()
+            return self.dfs()
         except (RecursionError, FunctionTimedOut, RuntimeError):
             print("\nDepth-first search didn't work. Now trying breadth-first search.\n")
             try:
@@ -290,33 +297,26 @@ class Computation:
 
     @func_set_timeout(30)
     def dfs(self, depth=0, path=None):
-        #print("\nCALLING DFS")
-        #print("SEARCH DEPTH: ", depth)
+
         if path is None:
             path = []
 
         # Iterate through each leaf in the configuration, starting with those with fewest available transitions.
         for leaf in self.order_active_branches():
-            #print(f"Current leaf: {leaf.get_denotation()}\n")
-            #print(f"Available transitions: {self.order_transitions(leaf)}")
             for index, (letter, conjuncts) in enumerate(self.order_transitions(leaf)):
-                #print(f"Current transition: {letter}, {conjuncts}\n")
 
                 # Make a copy of the Computation object in case we need to backtrack later
                 self_ = copy.deepcopy(self)
 
                 # In the copy of the dictionary, remove all other transitions from this configuration
                 self_.transition_dict[leaf.get_dict_key()] = [(letter, conjuncts)]
-                #new_config = self_.configuration.find_leaf_for_transition(leaf, letter, conjuncts)
-                #self_.update(new_config)
-                #print("self before running transitions: ", self_.configuration.get_denotation())
                 accept, reject = self_.run_deterministic_transitions()
-                #print("self after running transitions: ", self_.configuration.get_denotation())
-                #print(f"Accept: {accept}, Reject: {reject}\n")
 
                 if accept:
                     print("Word accepted!\n")
-                    return self_.print_computation()
+                    for ele in self_.get_computation_list():
+                        print(ele)
+                    return self_.get_computation_list()
 
                 if reject:
                     if index + 1 == len(self.order_transitions(leaf)):
@@ -324,24 +324,12 @@ class Computation:
                             return "Word rejected!"
                         else:
                             # Need to backtrack
-                            #print("Backtracking.")
                             return self.backtrack(path, depth)
-                    #else:
-                        #self_.transition_dict[leaf.get_dict_key()].remove((letter, conjuncts))
-
 
                 if not (accept or reject):
                     path.append((leaf, letter, conjuncts, self.configuration, self.computation, self.transition_dict, self.is_leaf))
                     return self_.dfs(depth + 1, path)
-            # Need to backtrack
-            #print("Backtracking.")
-            #return self.backtrack(path, depth)
-        # Need to backtrack
-        #print("Backtracking.")
-        #return self.backtrack(path, depth)
         print("Ran out of leaves to try")
-
-        #return Computation(self.sapda, self.input_string).bfs()
 
     def backtrack(self, path, depth):
         if not path:
@@ -349,11 +337,8 @@ class Computation:
         last_leaf, tried_letter, tried_conjuncts, last_config, last_computation, last_dict, last_is_leaf = path.pop()
         last_self = Computation(self.sapda, self.input_string, last_computation, last_config,
                                        last_dict, last_is_leaf)
-        #print(f"Removing {tried_letter, tried_conjuncts} from {last_leaf.get_dict_key()}")
-        #print(last_self.transition_dict[last_leaf.get_dict_key()])
         last_self.transition_dict[last_leaf.get_dict_key()].remove((tried_letter, tried_conjuncts))
         return last_self.dfs(depth - 1, path)
-
 
     @func_set_timeout(40)
     def bfs(self):
@@ -385,10 +370,10 @@ class Computation:
                         return new_self.print_computation()
                     if reject:
                         continue
-                    if new_self in paths.queue:
-                        print("ALREADY IN QUEUE")
+                    #if new_self in paths.queue:
+                        #print("ALREADY IN QUEUE")
                     else:
-                        print("STUCK. NEW SELF: ", new_self.configuration.get_denotation())
+                        #print("STUCK. NEW SELF: ", new_self.configuration.get_denotation())
                         paths.put(new_self)
 
         print("Queue empty, word rejected.")
@@ -613,11 +598,12 @@ sapda7 = SAPDA(
 
 
 # print(sapda4)
-#sapda = Computation(sapda3, 'abb$abb')
+sapda = Computation(sapda3, 'bb$bb')
 #sapda = Computation(sapda4, '0000000000000000')
 # # #
-#print(sapda.run_machine())
+print(sapda.run_machine())
 # #
+
 
 # leaf1 = Leaf(sapda1, ['e'], 'q0', 'abc')
 # print(leaf1.print_tree())
@@ -631,122 +617,3 @@ sapda7 = SAPDA(
 
 
 
-# leaf1 = Leaf(sapda3, ['e'], 'qe', 'a')
-# #
-# subtree = Tree(sapda3, ['a'], [leaf1, leaf1])
-#
-# print(subtree.print_tree())
-# print(subtree.are_synchronised_leaves())
-# subtree = subtree.synchronise()
-# print(subtree.print_tree())
-
-
-# tree1 = Tree(sapda3, ['e'], [leaf1, subtree])
-# tree2 = Tree(sapda3, ['e'], [leaf1, tree1])
-# tree3 = Tree(sapda3, ['e'], [leaf1, tree2])
-
-#print(tree3.print_tree())
-
-
-# print(leaf1)
-# print(tree3)
-# print(tree3.are_synchronised_leaves())
-# tree3 = tree3.synchronise()
-# print(tree3)
-# print(tree3.are_synchronised_leaves())
-# tree3 = tree3.synchronise()
-# print(tree3)
-# print(tree3.are_synchronised_leaves())
-# tree3 = tree3.synchronise()
-# print(tree3)
-# print(tree3.are_synchronised_leaves())
-# tree3 = tree3.synchronise()
-# print(tree3)
-# print(tree3.are_synchronised_leaves())
-
-
-
-#print(drawTree2(False)(False)(tree4))
-
-
-# def run_single_transition(self):
-#     """
-#     Run a single transition on the SAPDA configuration. Return Accept, Reject booleans
-#     """
-#     while self.is_deterministic_transition() and not self.is_accepting_config() and not self.is_rejecting_config():
-#
-#         if self.configuration.are_synchronised_leaves():
-#             while self.configuration.are_synchronised_leaves():
-#                 new_config = self.configuration.synchronise()
-#                 self.update(new_config)
-#                 if self.is_accepting_config() or self.is_rejecting_config():
-#                     return self.check_accept_reject()
-#
-#         if self.is_deterministic_transition():
-#             if self.is_leaf:
-#                 letter, conjuncts = self.transition_dict[self.configuration.get_dict_key()][0]
-#                 new_config = self.configuration.run_leaf_transition(letter, self.configuration.stack[0], conjuncts)
-#                 self.update(new_config)
-#                 if letter == 'e':
-#                     return self.check_accept_reject()
-#             else:
-#                 for leaf in self.configuration.get_active_branches():
-#                     if leaf.get_dict_key() in self.transition_dict and len(
-#                             self.transition_dict[leaf.get_dict_key()]) == 1 and not leaf.has_empty_stack():
-#                         #print("Can make transition!")
-#                         letter, conjuncts = self.transition_dict[leaf.get_dict_key()][0]
-#                         new_config = self.configuration.find_leaf_for_transition(leaf, letter, conjuncts)
-#                         self.update(new_config)
-#                         if letter == 'e':
-#                             return self.check_accept_reject()
-#                         #print("New config: ", self.configuration.get_denotation())
-#
-#     return self.check_accept_reject()
-
-# def run_deterministic_transitions(self):
-#     """
-#     From a given SAPDA configuration, runs transitions as long as there is only one available.
-#     Each transition is either an ordinary transition applied to a leaf, a conjunctive transition which splits a
-#     leaf into a tree, or collapsing of synchronised sibling leaves.
-#     After each transition, the new configuration is appended to the computation.
-#     Returns tuple of (Accept, Reject) booleans. If we reach a non-deterministic transition, both are False.
-#     """
-#     #print("Current config: ", self.configuration.get_denotation())
-#     # print("Current dict: ", self.transition_dict)
-#     # print("Current active branches: ")
-#     # for branch in self.configuration.get_active_branches():
-#     #     print("active branch: ", branch.get_denotation())
-#
-#     # Check for synchronised leaves. If synchronisation occurs, call this function again.
-#     if self.configuration.are_synchronised_leaves():
-#         new_config = self.configuration.synchronise()
-#         self.update(new_config)
-#         return self.run_deterministic_transitions()
-#
-#     # Check if in an accepting configuration
-#     if self.is_accepting_config():
-#         return True, False
-#
-#     # Check if in a rejecting configuration
-#     if self.is_rejecting_config():
-#         return False, True
-#
-#     # Check if next transition is non-deterministic:
-#     if not self.is_deterministic_transition():
-#         return False, False
-#
-#     # If the configuration is a single leaf, run the transition:
-#     if self.is_leaf:
-#         letter, conjuncts = self.transition_dict[self.configuration.get_dict_key()][0]
-#         new_config = self.configuration.run_leaf_transition(letter, self.configuration.stack[0], conjuncts)
-#         self.update(new_config)
-#         return self.run_deterministic_transitions()
-#
-#     for leaf in self.configuration.get_active_branches():
-#         if leaf.get_dict_key() in self.transition_dict and len(self.transition_dict[leaf.get_dict_key()]) == 1 and not leaf.has_empty_stack():
-#             letter, conjuncts = self.transition_dict[leaf.get_dict_key()][0]
-#             new_config = self.configuration.find_leaf_for_transition(leaf, letter, conjuncts)
-#             self.update(new_config)
-#             return self.run_deterministic_transitions()
-#
-#     print("Couldn't find a leaf within to do transition.")
