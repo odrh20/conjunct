@@ -2,6 +2,9 @@ import copy
 import random
 from CG import *
 from Word import *
+from Parser import *
+from tabulate import tabulate
+
 import sys
 sys.setrecursionlimit(10**6)
 
@@ -37,38 +40,38 @@ class Derivation:
         """
         Prints each step in the derivation, to be called when derivation of the input string is complete.
         """
-        print("\n")
-        print(f"\033[4mDerivation for {self.target_word}:\n\033[0m")
-        for word in self.bold_derivations():
-            print(word, "\n")
-        print("\nDerivation successful!\n")
-        return ""
 
-    def bold_derivations(self):
+        print_string = "\n"
+        print_string += f"[u]Derivation for {self.target_word}:[/u]\n\n"
+        for i, word in enumerate(self.get_derivation_list()):
+            if i != 0:
+                print_string += "\n" #[color=ffff00]=>[/color]\n"
+            print_string += word
+        return print_string
+
+    def get_derivation_list(self):
         """
         Highlight the symbols in the string where a rule was applied in red and return string.
         """
-        bold_words = []
+        derivation_words = []
 
         for i in range(len(self.derivation)):
 
             if i == len(self.derivation) - 1:
-                bold_words.append('\033[92m' + self.derivation[i][0].current_word + '\033[0m')
+                derivation_words.append('[color=40ff00]' + self.derivation[i][0].current_word + '[/color]')
 
             else:
-                bold_word = ''
-                bold_indices = self.derivation[i+1][2]
+                deriv_word = ''
+                rule_indices = self.derivation[i+1][2]
 
                 for j in range(len(self.derivation[i][0].current_word)):
-                    if j in bold_indices:
-                        bold_word += '\033[91m' + self.derivation[i][0].current_word[j] + '\033[0m'
+                    if j in rule_indices:
+                        deriv_word += '[color=ff3333]' + self.derivation[i][0].current_word[j] + '[/color]'
                     else:
-                        bold_word += self.derivation[i][0].current_word[j]
-                bold_words.append(bold_word)
+                        deriv_word += self.derivation[i][0].current_word[j]
+                derivation_words.append(deriv_word)
 
-        return bold_words
+        return derivation_words
 
     def derivation_complete(self):
         return self.get_latest_word().word == self.target_word
-
-

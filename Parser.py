@@ -42,7 +42,7 @@ class Parser:
     def get_node_set(self, pointers, i, j):
         """
         Given a set of possible pointers, and a position in the matrix, check if there is a rule in the grammar where
-        all conjuncts are in the pointer set. If so, add a Node in the current position.
+        all conjuncts are in the pointer set. If so, add a MatrixNode in the current position.
         """
         node_set = set()
         conjunct_set = set()
@@ -56,7 +56,7 @@ class Parser:
                     rule_set.add((variable, expansion))
 
         for var, expansion in rule_set:
-            new_node = Node(i, j, var)
+            new_node = MatrixNode(i, j, var)
             for conjunct in expansion:
                 for (conj, left_pos, right_pos) in pointers:
                     if conjunct == conj:
@@ -72,8 +72,8 @@ class Parser:
         if self.word == 'e':
             return ('e',) in self.grammar.rules[self.grammar.start_variable]
 
-        self.populate_table()
-        print(self)
+        #self.populate_table()
+        #print(self)
 
         return any(node.variable == self.grammar.start_variable for node in self.table[0, self.n-1])
 
@@ -91,22 +91,22 @@ class Parser:
                     node_set = node_set.union(new_nodes)
                     self.table[i, j] = self.get_node_set(node_set, i, j)
 
-        for node in list(self.table[0, self.n-1]):
-            if node.variable != self.grammar.start_variable:
-                self.table[0, self.n - 1].remove(node)
+        # for node in list(self.table[0, self.n-1]):
+        #     if node.variable != self.grammar.start_variable:
+        #         self.table[0, self.n - 1].remove(node)
 
     def compute_diagonal(self):
         for i in range(self.n):
             self.table[i, i] = set()
             for variable in self.grammar.rules:
                 if (self.word[i],) in self.grammar.rules[variable]:
-                    new_node = Node(i, i, variable)
+                    new_node = MatrixNode(i, i, variable)
                     new_node.update_pointers(self.word[i], None, None)
                     self.table[i, i].add(new_node)
 
     def get_matrix(self):
 
-        self.populate_table()
+        #self.populate_table()
 
         data = copy.deepcopy(self.table)
 
@@ -120,19 +120,19 @@ class Parser:
         data = np.where(data is None, '', data)
         data = np.where(data == set(), '{}', data)
 
-        if self.grammar.start_variable in data[0, self.n - 1]:
-            data[0, self.n - 1] = '\033[92m' + str(data[0, self.n - 1]) + '\033[0m'
+        #if self.grammar.start_variable in data[0, self.n - 1]:
+        data[0, self.n - 1] = str(data[0, self.n - 1])
 
-        else:
-            data[0, self.n - 1] = '\033[91m' + str(data[0, self.n - 1]) + '\033[0m'
+        #else:
+        #    data[0, self.n - 1] = '\033[91m' + str(data[0, self.n - 1]) + '\033[0m'
 
-        return tabulate(data, headers=[('\033[91m' + letter + '\033[0m') for letter in self.word], tablefmt='psql')
+        return tabulate(data, headers=[letter for letter in self.word], tablefmt='psql')
 
     def __str__(self):
         """
         Uses tabulate to generate a recognition matrix for printing.
         """
-        self.populate_table()
+        #self.populate_table()
 
         data = copy.deepcopy(self.table)
 
@@ -162,8 +162,25 @@ class Parser:
         The latest word is a Word object which contains an index dictionary, keeping track of the current position of
         each variable.
         """
-        if self.word == 'e':  # Special case when the word is empty
-            return [f'[color=ff3333]{self.grammar.start_variable}[/color]', '[color=40ff00]e[/color]']
+
+        return_list = []
+        # Deal with the special case where input string is 'e' first.
+        if self.word == 'e':
+            if self.recognise_word():
+                return_list.append("The empty word belongs to the language.")
+                return_list += [f'[color=ff3333]{self.grammar.start_variable}[/color]', '[color=40ff00]e[/color]']
+            else:
+                return_list.append("The empty word does not belong to the language.")
+            return return_list
+
+        return_list += [self.get_matrix()]
+
+        if not self.recognise_word():
+            return_list.append("As the start variable cannot be found in the top-right cell of the CYK matrix, the string is rejected.")
+            return return_list
+
+        return_list.append("As the start variable is found in the top-right cell of the CYK matrix, the string is accepted.\nA derivation is displayed below.")
+
         # Initialise a new derivation.
         d = Derivation(self.grammar, self.word)
 
@@ -175,22 +192,26 @@ class Parser:
                     d.derivation += d.get_latest_word().apply_rule(active_var, expansion, idx)
                     d.get_latest_word().update_variable_tracker(node)
 
-        return d.get_derivation_list()
+        return_list += d.get_derivation_list()
+        return return_list
+
+
+
 
 
 
 
 """
-Cells in a recognition matrix contain sets of Node objects.
-Each Node corresponds to a specific position in the matrix and a single rule to follow, which may contain more than one
+Cells in a recognition matrix contain sets of MatrixNode objects.
+Each MatrixNode corresponds to a specific position in the matrix and a single rule to follow, which may contain more than one
 conjunct.
 The pointer dictionary shows where the rule points to for each conjunct, in left and downward directions for both
 variables in a two-variable rule.
-If the Node is on the diagonal, then the rule goes to a single terminal and the pointers are None values.
+If the MatrixNode is on the diagonal, then the rule goes to a single terminal and the pointers are None values.
 """
 
 
-class Node:
+class MatrixNode:
     def __init__(self, i, j, variable, pointers=None):
         self.i = i
         self.j = j
@@ -211,7 +232,7 @@ class Node:
         return self.variable
 
 #
-p = Parser(cg1.convert_to_BNF(), 'e')
+#p = Parser(cg1.convert_to_BNF(), 'e')
 
 
 # if p.recognise_word():
@@ -221,4 +242,4 @@ p = Parser(cg1.convert_to_BNF(), 'e')
 #
 #
 #
-print(p.find_parse())
+#print(p.find_parse())

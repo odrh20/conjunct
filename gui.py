@@ -10,13 +10,11 @@ from kivy.uix.recycleview import RecycleView
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
 
-
 from CG import *
 from SAPDA import *
 from Parser import *
 
-
-# Define our different screens
+# Define the different screens
 
 class StartWindow(Screen):
     pass
@@ -54,6 +52,9 @@ class GenerateParseWindow(Screen):
     pass
 
 
+class ConvertCGToSAPDAWindow(Screen):
+    pass
+
 
 class WindowManager(ScreenManager):
     pass
@@ -70,7 +71,6 @@ class ConjunctApp(App):
     my_sapda = ObjectProperty(None)
     my_computation = ListProperty(None)
 
-
     cg1 = ObjectProperty(cg1)
     cg2 = ObjectProperty(cg2)
     cg3 = ObjectProperty(cg3)
@@ -80,15 +80,13 @@ class ConjunctApp(App):
     sapda3 = ObjectProperty(sapda3)
 
 
-
     def build(self):
 
-        #Window.clearcolor = (1, 1, 1, 1)
         kv = Builder.load_file('gui.kv')
 
         return kv
 
 
 if __name__ == '__main__':
-    ConjunctApp().run()
 
+    ConjunctApp().run()

@@ -1,7 +1,8 @@
 from Computation import *
 from SAPDA import *
 from CG import *
-from Derivation_ import *
+from Derivation import *
+from Parser import *
 from prompt_toolkit import print_formatted_text, HTML
 
 
@@ -136,7 +137,8 @@ def choose_CG():
                            f"\n1. {cg1.name} \n"
                            f"2. {cg2.name} \n"
                            f"3. {cg3.name} \n"
-                           f"4. Return to start.\n"
+                           f"4. {cg4.name} \n"
+                           f"5. Return to start.\n"
                            f"\nEnter choice : "))
 
         cg = None
@@ -150,6 +152,9 @@ def choose_CG():
             cg = cg3
 
         elif choice == 4:
+            cg = cg4
+
+        elif choice == 5:
             main()
         else:
             raise ValueError
@@ -165,16 +170,19 @@ def choose_CG():
 def choose_CG_action(cg):
     try:
         choice = int(input(
-            "\n1. Derivation."
+            "\n1. Apply CYK algorithm for parsing."
             "\n2. Convert grammar to an equivalent SAPDA."
             "\n3. Return to start.\n"
             "\nEnter choice : "))
 
         if choice == 1:
-            input_string = str(input("Enter string:  "))
-            derivation = Derivation(cg, Word(cg, input_string))
-            print(derivation.get_derivation())
-            choose_CG_action(cg)
+            cg_bnf = copy.deepcopy(cg)
+            if not cg.is_in_BNF():
+                print("\nFirst, the grammar needs to be converted to Binary Normal Form.\n")
+                cg_bnf.convert_to_BNF()
+
+            print("The grammar is in Binary Normal Form, and can be parsed using CYK.\n")
+            CYK_parser(cg_bnf, cg)
 
         elif choice == 2:
             sapda = cg.convert_to_sapda()
@@ -189,6 +197,40 @@ def choose_CG_action(cg):
     except ValueError:
         print("\nInvalid input. Try again.\n")
         return choose_CG_action(cg)
+
+
+def CYK_parser(cg_bnf, cg):
+
+    input_string = str(input("Enter string:  "))
+    parser = Parser(cg_bnf, input_string)
+    if parser.recognise_word():
+        print("The string belongs to the language!\n")
+        print(parser.find_parse())
+    else:
+        print("The string does not belong to the language.\n")
+
+    choice_after_parsing(cg_bnf, cg)
+
+
+def choice_after_parsing(cg_bnf, cg):
+    try:
+        choice = int(input(
+            "\n1. Try another string."
+            "\n2. Do something else with this grammar."
+            "\n3. Return to start.\n"
+            "\nEnter choice : "))
+        if choice == 1:
+            CYK_parser(cg_bnf, cg)
+        elif choice == 2:
+            choose_CG_action(cg)
+        elif choice == 3:
+            main()
+        else:
+            raise ValueError
+
+    except ValueError:
+        print("\nInvalid input. Try again.\n")
+        return choice_after_parsing(cg_bnf, cg)
 
 
 def main():

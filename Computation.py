@@ -40,7 +40,7 @@ class Computation:
     def get_computation_list(self):
         comp_list = []
         for i in range(len(self.computation)):
-            step = f"Step {i+1} \n{self.computation[i].print_tree()}"
+            step = f"[u]Step {i+1}[/u]\n\n{self.computation[i].print_tree()}"
             comp_list.append(step)
         return comp_list
 
@@ -404,7 +404,7 @@ sapda2 = SAPDA(
 
 # a^n b^n c^n (n > 0) : this is a deterministic SAPDA
 sapda1 = SAPDA(
-    name="Words made of blocks of a's, b's and c's of equal length. {a^n b^n c^n | n > 0}",
+    name="Blocks of a's, b's and c's of equal length. {a^n b^n c^n | n > 0}",
     states={'q0', 'qbc+', 'qbc-', 'qac+', 'qac-', 'qb'},
     input_alphabet={'a', 'b', 'c'},
     stack_alphabet={'Z', 'A'},
@@ -598,10 +598,10 @@ sapda7 = SAPDA(
 
 
 # print(sapda4)
-sapda = Computation(sapda3, 'bb$bb')
+#sapda = Computation(sapda3, 'abbab$abbab')
 #sapda = Computation(sapda4, '0000000000000000')
 # # #
-print(sapda.run_machine())
+#print(sapda.run_machine())
 # #
 
 
@@ -614,6 +614,3 @@ print(sapda.run_machine())
 # subtree3 = Tree(sapda1, ['e'], [leaf2, subtree2])
 # tree1 = Tree(sapda1, ['b', 'Z'], [leaf2, subtree3])
 # print(tree1.print_tree())
-
-
-

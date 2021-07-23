@@ -1,17 +1,18 @@
 from prompt_toolkit import print_formatted_text, HTML
 
+
 class SAPDA:
     def __init__(self, user=False, name=None, states=None, input_alphabet=None, stack_alphabet=None, transitions=None,
                  initial_state=None, initial_stack_symbol=None):
         """Instantiate SAPDA object"""
 
         if user:
-            self.name = self.name_sapda()
-            self.initial_state, self.states = self.set_states()
-            self.input_alphabet = self.set_input_alphabet()
-            self.initial_stack_symbol, self.stack_alphabet = self.set_stack_alphabet()
+            self.name_sapda()
+            self.set_states()
+            self.set_input_alphabet()
+            self.set_stack_alphabet()
             self.transitions = dict()
-            self.transitions = self.add_transitions()
+            self.add_transitions()
 
         else:
             self.name = name
@@ -148,33 +149,29 @@ class SAPDA:
     #                                 return True
     #     return False
 
-    @staticmethod
     def name_sapda(self):
-        return input("\nEnter a name for your SAPDA: ")
+        self.name = input("\nEnter a name for your SAPDA: ")
+        return
 
-    @staticmethod
     def set_states(self):
         print_formatted_text(HTML('<u>\nSTATES\n</u>'))
         print("Input all states separated by spaces. The first state will be taken as the initial state.\n")
         states = input("Enter states: ").split()
-        return str(states[0]), set(states)
+        self.initial_state, self.states = str(states[0]), set(states)
 
-    @staticmethod
     def set_input_alphabet(self):
         print_formatted_text(HTML('<u>\nINPUT ALPHABET\n</u>'))
         print("Input all letters in the input alphabet separated by spaces.\n")
         input_alphabet = input("Enter input alphabet: ").split()
-        return set(input_alphabet)
+        self.input_alphabet = set(input_alphabet)
 
-    @staticmethod
     def set_stack_alphabet(self):
         print_formatted_text(HTML('<u>\nSTACK ALPHABET\n</u>'))
         print("Input all letters in the stack alphabet separated by spaces. The first letter will be taken as the "
               "initial stack symbol.\n")
         stack_alphabet = input("Enter stack alphabet: ").split()
-        return str(stack_alphabet[0]), set(stack_alphabet)
+        self.initial_stack_symbol, self.stack_alphabet = str(stack_alphabet[0]), set(stack_alphabet)
 
-    @staticmethod
     def add_transitions(self):
         """
         Prompt user to add all transitions for a given current state, letter to read, and symbol to pop.
@@ -247,4 +244,3 @@ class SAPDA:
             if letter not in self.stack_alphabet:
                 return False
         return True
-

@@ -5,7 +5,6 @@ from Computation import *
 from itertools import chain, combinations
 
 
-
 class CG:
     def __init__(self, user=False, name=None, terminals=None, variables=None, start_variable=None, rules=None,
                  chars=None):
@@ -272,9 +271,6 @@ class CG:
                         if len(conjunct) == 2 and conjunct[0] in self.variables and conjunct[1] in self.variables:
                             continue
                         else:
-                            print("Conjunct: ", conjunct)
-                            print("Expansion: ", expansion)
-                            print("Variable: ", variable)
                             return False
 
         return True
@@ -409,8 +405,6 @@ class CG:
                     self.rules[variable].remove(expansion)
                     self.rules[variable].add(tuple(set(expansion)))
 
-
-
     def remove_useless_rules(self):
         """
         All conjuncts either have:
@@ -506,57 +500,33 @@ class CG:
 
     def convert_to_BNF(self):
 
-        e_in_language = False
-        if self.start_variable in self.get_nullable_set():
-            e_in_language = True
+        #print(self)
+        #print("\nCONVERTING TO BINARY NORMAL FORM...\n")
+        self_ = copy.deepcopy(self)
 
-        #print("e in language: ", e_in_language)
-        print(self)
-        #print("REMOVING E CONJUNCTS")
-        self.remove_e_conjuncts()
-        #print(self)
-        #print("REMOVING UNIT CONJUNCTS")
-        #print(self.get_unit_conjuncts())
-        self.remove_unit_conjuncts()
-        #print(self)
-        self.collapse_equal_conjuncts()
-        #print("REMOVING USELESS RULES")
-        self.remove_useless_rules()
-        #print(self)
-        #print("TERMINALS TO VARIABLES")
-        self.terminals_to_variables()
-        #print(self)
-        #print("SPLIT LONG CONJUNCTS")
-        self.split_long_conjuncts()
-        #print(self)
+        e_in_language = False
+        if self_.start_variable in self_.get_nullable_set():
+            e_in_language = True
+        self_.remove_e_conjuncts()
+        self_.remove_unit_conjuncts()
+        self_.collapse_equal_conjuncts()
+        self_.remove_useless_rules()
+        self_.terminals_to_variables()
+        self_.split_long_conjuncts()
 
         if e_in_language:
-            old_start_var = self.start_variable
-            new_start_var = self.generate_new_variable()
-            self.start_variable = new_start_var
-            self.rules[new_start_var] = {('e',)}
-            for exp in self.rules[old_start_var]:
-                self.rules[new_start_var].add(exp)
-            #print(self)
-        print("\nCONVERTING TO BINARY NORMAL FORM\n")
-        print(self)
-        return
+            old_start_var = self_.start_variable
+            new_start_var = self_.generate_new_variable()
+            self_.start_variable = new_start_var
+            self_.rules[new_start_var] = {('e',)}
+            for exp in self_.rules[old_start_var]:
+                self_.rules[new_start_var].add(exp)
+        #print(self_)
+        return self_
 
 
-
-
-
-
-
-
-
-
-
-
-
-# a^n b^n c^n (n>=0)
 cg1 = CG(
-    name="Words made of blocks of a's, b's and c's of equal length. {a^n b^n c^n | n >= 0}",
+    name="Blocks of a's, b's and c's of equal length. {a^n b^n c^n | n >= 0}",
     terminals={'a', 'b', 'c'},
     variables={'S', 'A', 'B', 'C', 'D'},
     start_variable='S',
@@ -585,7 +555,6 @@ cg2 = CG(
     },
 )
 
-# w$w w: {a,b} Reduplication with centre marker
 cg3 = CG(
     name="Reduplication with centre marker: {w$w | w ∈ {a, b}*}",
     terminals={'a', 'b', '$'},
@@ -601,31 +570,8 @@ cg3 = CG(
     },
 )
 
-#
 cg4 = CG(
-    terminals={'a', 'b'},
-    variables={'S'},
-    start_variable='S',
-    rules={
-        'S': {('aSa',), ('aSb',), ('e', )},
-    },
-)
-
-# Just for testing
-cg5 = CG(
-    terminals={'a', 'b'},
-    variables={'S', 'A', 'B'},
-    start_variable='S',
-    rules={
-        'S': {('AB',), ('e',)},
-        'A': {('a',)},
-        'B': {('b',)}
-    },
-)
-
-
-cg6 = CG(
-    name="Strings of a's with power of 4 lengths. a^(4n)",
+    name="Strings of a's where the length is a power of 4. a^(4n)",
     terminals={'a'},
     variables={'A', 'B', 'C', 'D'},
     start_variable='A',
@@ -638,6 +584,32 @@ cg6 = CG(
 )
 
 
+cg5 = CG(
+    terminals={'a', 'b'},
+    variables={'S'},
+    start_variable='S',
+    rules={
+        'S': {('aSa',), ('aSb',), ('e', )},
+    },
+)
+
+# Just for testing
+cg6 = CG(
+    terminals={'a', 'b'},
+    variables={'S', 'A', 'B'},
+    start_variable='S',
+    rules={
+        'S': {('AB',), ('e',)},
+        'A': {('a',)},
+        'B': {('b',)}
+    },
+)
+
+
+#
+# print(cg3.is_in_BNF())
+# cg3.convert_to_BNF()
+# print(cg3.is_in_BNF())
 
 # print(cg4.is_in_BNF())
 # cg4.convert_to_BNF()
@@ -645,7 +617,6 @@ cg6 = CG(
 #
 # print(cg1.chars)
 
-print(cg6)
-
-print(cg6.convert_to_BNF())
-
+# print(cg6)
+#
+# print(cg6.convert_to_BNF())
