@@ -2,26 +2,18 @@ from prompt_toolkit import print_formatted_text, HTML
 
 
 class SAPDA:
-    def __init__(self, user=False, name=None, states=None, input_alphabet=None, stack_alphabet=None, transitions=None,
-                 initial_state=None, initial_stack_symbol=None):
+    def __init__(self, states, input_alphabet, stack_alphabet, transitions,
+                 initial_state, initial_stack_symbol, name=None, user_defined=False):
         """Instantiate SAPDA object"""
 
-        if user:
-            self.name_sapda()
-            self.set_states()
-            self.set_input_alphabet()
-            self.set_stack_alphabet()
-            self.transitions = dict()
-            self.add_transitions()
 
-        else:
-            self.name = name
-            self.states = self.set_all_str(states)
-            self.input_alphabet = self.set_all_str(input_alphabet)
-            self.stack_alphabet = self.set_all_str(stack_alphabet)
-            self.transitions = transitions
-            self.initial_state = str(initial_state)
-            self.initial_stack_symbol = str(initial_stack_symbol)
+        self.name = name
+        self.states = self.set_all_str(states)
+        self.input_alphabet = self.set_all_str(input_alphabet)
+        self.stack_alphabet = self.set_all_str(stack_alphabet)
+        self.transitions = transitions
+        self.initial_state = str(initial_state)
+        self.initial_stack_symbol = str(initial_stack_symbol)
 
     def __eq__(self, other):
         return (self.states == other.states) and (self.input_alphabet == other.input_alphabet) and \
@@ -149,76 +141,76 @@ class SAPDA:
     #                                 return True
     #     return False
 
-    def name_sapda(self):
-        self.name = input("\nEnter a name for your SAPDA: ")
-        return
-
-    def set_states(self):
-        print_formatted_text(HTML('<u>\nSTATES\n</u>'))
-        print("Input all states separated by spaces. The first state will be taken as the initial state.\n")
-        states = input("Enter states: ").split()
-        self.initial_state, self.states = str(states[0]), set(states)
-
-    def set_input_alphabet(self):
-        print_formatted_text(HTML('<u>\nINPUT ALPHABET\n</u>'))
-        print("Input all letters in the input alphabet separated by spaces.\n")
-        input_alphabet = input("Enter input alphabet: ").split()
-        self.input_alphabet = set(input_alphabet)
-
-    def set_stack_alphabet(self):
-        print_formatted_text(HTML('<u>\nSTACK ALPHABET\n</u>'))
-        print("Input all letters in the stack alphabet separated by spaces. The first letter will be taken as the "
-              "initial stack symbol.\n")
-        stack_alphabet = input("Enter stack alphabet: ").split()
-        self.initial_stack_symbol, self.stack_alphabet = str(stack_alphabet[0]), set(stack_alphabet)
-
-    def add_transitions(self):
-        """
-        Prompt user to add all transitions for a given current state, letter to read, and symbol to pop.
-        Return a set of transitions of the form {((q1, a1), (q2, a2), ... ), ((q1', a1'), (q2', a2'), ... ), ... }
-        """
-
-        if bool(self.transitions):
-            print(self.print_transitions())
-
-        print_formatted_text(HTML('<u>\nTRANSITIONS\n</u>'))
-        trans_LHS = input("Enter state, letter to read, stack symbol to pop, separated by spaces:  ").split()
-
-        if not trans_LHS:
-            print("\nSAPDA created!\n")
-            return self.transitions
-
-        if len(trans_LHS) != 3 or trans_LHS[0] not in self.states or trans_LHS[1] not in self.input_alphabet.union({'e'}) \
-                or trans_LHS[2] not in self.stack_alphabet:
-            print("\nInvalid input. Try again.\n")
-            return self.add_transitions()
-
-        state, letter, pop = trans_LHS[0], trans_LHS[1], trans_LHS[2]
-
-        trans_RHS = input("\nEnter conjuncts of next state, stack string to push, separated by spaces:  ").split()
-
-        if not self.is_valid_transition(trans_RHS):
-            print("\nInvalid transition. Try again.\n")
-            return self.add_transitions()
-
-        if len(trans_RHS) == 2:
-            transition = ((trans_RHS[0], trans_RHS[1]),)
-        else:
-            transition = []
-            for i in range(len(trans_RHS)):
-                if i % 2 == 0:
-                    transition.append((trans_RHS[i], trans_RHS[i + 1]))
-            transition = tuple(transition)
-
-        if state not in self.transitions:
-            self.transitions[state] = dict()
-        if pop not in self.transitions[state]:
-            self.transitions[state][pop] = dict()
-        if letter not in self.transitions[state][pop]:
-            self.transitions[state][pop][letter] = set()
-
-        self.transitions[state][pop][letter].add(transition)
-        return self.add_transitions()
+    # def name_sapda(self):
+    #     self.name = input("\nEnter a name for your SAPDA: ")
+    #     return
+    #
+    # def set_states(self):
+    #     print_formatted_text(HTML('<u>\nSTATES\n</u>'))
+    #     print("Input all states separated by spaces. The first state will be taken as the initial state.\n")
+    #     states = input("Enter states: ").split()
+    #     self.initial_state, self.states = str(states[0]), set(states)
+    #
+    # def set_input_alphabet(self):
+    #     print_formatted_text(HTML('<u>\nINPUT ALPHABET\n</u>'))
+    #     print("Input all letters in the input alphabet separated by spaces.\n")
+    #     input_alphabet = input("Enter input alphabet: ").split()
+    #     self.input_alphabet = set(input_alphabet)
+    #
+    # def set_stack_alphabet(self):
+    #     print_formatted_text(HTML('<u>\nSTACK ALPHABET\n</u>'))
+    #     print("Input all letters in the stack alphabet separated by spaces. The first letter will be taken as the "
+    #           "initial stack symbol.\n")
+    #     stack_alphabet = input("Enter stack alphabet: ").split()
+    #     self.initial_stack_symbol, self.stack_alphabet = str(stack_alphabet[0]), set(stack_alphabet)
+    #
+    # def add_transitions(self):
+    #     """
+    #     Prompt user to add all transitions for a given current state, letter to read, and symbol to pop.
+    #     Return a set of transitions of the form {((q1, a1), (q2, a2), ... ), ((q1', a1'), (q2', a2'), ... ), ... }
+    #     """
+    #
+    #     if bool(self.transitions):
+    #         print(self.print_transitions())
+    #
+    #     print_formatted_text(HTML('<u>\nTRANSITIONS\n</u>'))
+    #     trans_LHS = input("Enter state, letter to read, stack symbol to pop, separated by spaces:  ").split()
+    #
+    #     if not trans_LHS:
+    #         print("\nSAPDA created!\n")
+    #         return self.transitions
+    #
+    #     if len(trans_LHS) != 3 or trans_LHS[0] not in self.states or trans_LHS[1] not in self.input_alphabet.union({'e'}) \
+    #             or trans_LHS[2] not in self.stack_alphabet:
+    #         print("\nInvalid input. Try again.\n")
+    #         return self.add_transitions()
+    #
+    #     state, letter, pop = trans_LHS[0], trans_LHS[1], trans_LHS[2]
+    #
+    #     trans_RHS = input("\nEnter conjuncts of next state, stack string to push, separated by spaces:  ").split()
+    #
+    #     if not self.is_valid_transition(trans_RHS):
+    #         print("\nInvalid transition. Try again.\n")
+    #         return self.add_transitions()
+    #
+    #     if len(trans_RHS) == 2:
+    #         transition = ((trans_RHS[0], trans_RHS[1]),)
+    #     else:
+    #         transition = []
+    #         for i in range(len(trans_RHS)):
+    #             if i % 2 == 0:
+    #                 transition.append((trans_RHS[i], trans_RHS[i + 1]))
+    #         transition = tuple(transition)
+    #
+    #     if state not in self.transitions:
+    #         self.transitions[state] = dict()
+    #     if pop not in self.transitions[state]:
+    #         self.transitions[state][pop] = dict()
+    #     if letter not in self.transitions[state][pop]:
+    #         self.transitions[state][pop][letter] = set()
+    #
+    #     self.transitions[state][pop][letter].add(transition)
+    #     return self.add_transitions()
 
     def is_valid_transition(self, transition):
         """

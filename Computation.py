@@ -272,16 +272,16 @@ class Computation:
 
         for letter in self.input_string:
             if self.input_string != 'e' and letter not in self.sapda.input_alphabet:
-                return "Word rejected!"
+                return []
 
         accept, reject = self.run_deterministic_transitions()
 
         if accept:
-            print("Word accepted!\n")
+            #print("Word accepted!\n")
             return self.get_computation_list()
 
         if reject:
-            return "Word rejected!"
+            return []
 
         # Else we reached a non-deterministic transition
         print("\nLooking for solution...\n")
@@ -313,15 +313,13 @@ class Computation:
                 accept, reject = self_.run_deterministic_transitions()
 
                 if accept:
-                    print("Word accepted!\n")
-                    for ele in self_.get_computation_list():
-                        print(ele)
+                    #print("Word accepted!\n")
                     return self_.get_computation_list()
 
                 if reject:
                     if index + 1 == len(self.order_transitions(leaf)):
                         if depth == 0:
-                            return "Word rejected!"
+                            return []
                         else:
                             # Need to backtrack
                             return self.backtrack(path, depth)
@@ -366,7 +364,7 @@ class Computation:
                     #new_self.transition_dict[leaf.get_dict_key()] = [(letter, conjuncts)]
                     accept, reject = new_self.run_deterministic_transitions()
                     if accept:
-                        print("Word accepted!\n")
+                        #print("Word accepted!\n")
                         return new_self.print_computation()
                     if reject:
                         continue
@@ -376,8 +374,7 @@ class Computation:
                         #print("STUCK. NEW SELF: ", new_self.configuration.get_denotation())
                         paths.put(new_self)
 
-        print("Queue empty, word rejected.")
-        return
+        return []
 
 
 # words with equal number of a's, b's and c's

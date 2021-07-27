@@ -6,23 +6,24 @@ from itertools import chain, combinations
 
 
 class CG:
-    def __init__(self, user=False, name=None, terminals=None, variables=None, start_variable=None, rules=None,
-                 chars=None):
+    def __init__(self, terminals, variables, start_variable, rules,
+                 name=None, user_defined=False, chars=None):
         """Instantiate Conjunctive Grammar object"""
 
-        if user:
-            self.name = self.name_CG()
-            self.start_variable, self.variables = self.set_variables()
-            self.terminals = self.set_terminals()
-            self.rules = dict()
-            self.rules = self.add_rules()
+        # if user_input:
+        #
+            # self.name = self.name_CG()
+            # self.start_variable, self.variables = self.set_variables()
+            # self.terminals = self.set_terminals()
+            # self.rules = dict()
+            # self.rules = self.add_rules()
 
-        else:
-            self.name = name
-            self.variables = self.set_all_str(variables)
-            self.terminals = self.set_all_str(terminals)
-            self.rules = rules
-            self.start_variable = str(start_variable)
+        self.name = name
+        self.variables = self.set_all_str(variables)
+        self.terminals = self.set_all_str(terminals)
+        self.rules = rules
+        self.start_variable = str(start_variable)
+        self.user_defined = user_defined
 
         if chars is None:
             #char_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%*+,-./:;<=>?@[]^_`{}~'
@@ -35,9 +36,12 @@ class CG:
                 if chr(i) not in (upper+lower):
                     self.chars.append(chr(i))
 
+
+
     def __eq__(self, other):
         return (self.terminals == other.terminals) and (self.variables == other.variables) and \
-               (self.start_variable == other.start_variable) and (self.rules == other.rules)
+               (self.start_variable == other.start_variable) and (self.rules == other.rules) #and \
+               #(self.name == other.name)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -75,58 +79,6 @@ class CG:
         print("Ran out of chars for new variables!")
         return ""
 
-    @staticmethod
-    def name_CG():
-        return input("\nEnter a name for your Conjunctive Grammar: ")
-
-    @staticmethod
-    def set_variables():
-        print_formatted_text(HTML('<u>\nVARIABLES\n</u>'))
-        print("Input all variables separated by spaces. The first variable will be taken as the start variable.\n")
-        variables = input("Enter variables: ").split()
-        return str(variables[0]), set(variables)
-
-    @staticmethod
-    def set_terminals():
-        print_formatted_text(HTML('<u>\nTERMINALS\n</u>'))
-        print("Input all terminal symbols separated by spaces.\n")
-        input_alphabet = input("Enter terminals: ").split()
-        return set(input_alphabet)
-
-    def add_rules(self):
-        """
-        Prompt user to add all rules for each variable.
-        """
-
-        if bool(self.rules):
-            print(self.print_rules())
-
-        print_formatted_text(HTML('<u>\nRULES\n</u>'))
-        rule_LHS = input("Enter a variable for the left-hand side of the rule:  ")
-
-        if not rule_LHS:
-            print("\nConjunctive Grammar created!\n")
-            return self.rules
-
-        if rule_LHS not in self.variables:
-            print("\nNot a variable. Try again.\n")
-            return self.add_rules()
-
-        variable = rule_LHS
-
-        rule_RHS = input("\nEnter conjuncts for the right-hand side of rule, separated by spaces:  ").split()
-
-        if not self.is_valid_expansion(rule_RHS):
-            print("\nInvalid expansion. Try again.\n")
-            return self.add_rules()
-
-        expansion = tuple(rule_RHS)
-
-        if variable not in self.rules:
-            self.rules[variable] = set()
-
-        self.rules[variable].add(expansion)
-        return self.add_rules()
 
     def is_valid_expansion(self, expansion):
         """
