@@ -1,0 +1,345 @@
+Welcome to Conjunct: a program for learning about conjunctive grammars and synchronised alternating pushdown automata (SAPDA).
+
+Conjunctive grammars are a lot like context-free grammars, but they have one extra feature: the use of conjunctions in their rules. This allows us to make conjunctive grammars to describe some languages which are not context-free.
+
+The SAPDA is an equivalent computational model which recognises the same class of languages. It is similar to the pushdown automaton (PDA), but it can use conjunctions in its transitions.
+
+This program aims to educate the user about conjunctive grammars and SAPDA. To get started, it is recommended to select the Conjunctive Grammar option on the start menu. Here, you can view the tutorial and learn how conjunctive grammars work. There are several example grammars you can choose from and test out on any input string. You are also able to design your own grammars.
+
+Then, you can select the SAPDA option to learn about the automaton model. Again you can try some different example automata on different input strings, and visualise the steps in the computation. If you're feeling brave, you may also try to design your own automaton.
+£
+Input all rules for your grammar here.
+
+• Variables and terminals must all be represented by a single character.
+
+• Each rule should be of the form A ⟶ α[sub]1[/sub] & ... & α[sub]n[/sub] (n ≥ 1).
+
+• The left-hand side of the first rule will be taken as the start variable.
+
+• '&', '(' and ')' are special characters in conjunctive grammars. They are assumed to not appear in either terminal or variable alphabets.
+
+• The 'e' character is reserved for the empty word.
+£
+Input all transitions for your SAPDA here.
+
+• Each transition is of the form δ([color=ff0000]state[/color], [color=ff0000]letter[/color], [color=ff0000]symbol to pop from stack[/color]) = ([color=ff0000]new state[/color], [color=ff0000]string to push to stack[/color]) ∧ ... ∧ ([color=ff0000]new state[/color], [color=ff0000]string to push to stack[/color])
+
+• The symbol popped in the first transition listed will be taken as the initial stack symbol.
+
+• The current state in the first transition listed will be taken as the initial state.
+
+• Remember, with each transition a single symbol must be popped from the top of the stack. Even if you don't need to change the stack, you need to pop the top symbol and push it back on.
+
+• The 'e' character is reserved for the empty word. This can be used in two ways: as a letter to read, and for pushing nothing to the stack.
+
+
+£
+Conjunctive grammars were introduced by Alexander Okhotin in 2001. They extend context-free grammars with conjunctive rules.
+
+
+A conjunctive grammar is defined as a quadruple G = (Σ, V, R, S) where:
+
+• Σ is an alphabet of terminals
+
+• V is an alphabet of variables disjoint from Σ
+
+• R is a finite set of rules of the form A ⟶ α[sub]1[/sub] & ... & α[sub]n[/sub] where A ∈ V, n ≥ 1 and α[sub]1[/sub] & ... & α[sub]n[/sub] ∈ (Σ ∪ V)[sup]*[/sup]
+
+• S ∈ V is the start variable
+
+
+This looks a lot like the definition of context-free grammars. The only difference is that rules may have any number of different conjuncts.
+
+
+If a rule has just a single conjunct, then it works exactly like a context-free grammar rule. For example, we could have a rule 'A ⟶ B'.
+
+
+But how about a rule with multiple conjuncts? For example, we could have a rule A ⟶ B & C. After applying
+this rule, the derivation has now been split into two independent paths.
+
+
+To achieve a successful derivation, all of the paths must eventually agree with each other in order to collapse to a single term.
+
+
+Let's look at an example to see what this means.
+£
+This grammar generates a non-context-free language {a[sup]n[/sup]b[sup]n[/sup]c[sup]n[/sup] | n ≥ 0}.
+
+
+• Σ = {a, b, c}
+
+
+• V = {S, A, B, C, D}
+
+
+• R is the following set of rules:
+
+    S ⟶ A & C
+    A ⟶ aA | B
+    B ⟶ bBc | e
+    C ⟶ Cc | D
+    D ⟶ aDb | e
+
+
+• S is the start variable
+
+
+
+Below a simplified derivation for the string 'abc' is shown:
+
+S ⟹ A & C ⟹ aA & C ⟹ aB & C ⟹ abBc & C ⟹ abc & C ⟹ abc & Cc ⟹ abc & Dc ⟹ abc & aDbc ⟹ abc & abc ⟹ abc
+
+
+We can see that once the rule S ⟹ A & C is applied, there are two separate derivations: one from A and one from C. In this example, we start with the 'A' conjunct, and apply rules until we reach 'abc'. Then, we move on to the 'C' conjunct, and apply rules until we reach 'abc'. When we have 'abc & abc', both conjuncts are equal. Therefore they collapse to a single term: 'abc'.
+
+
+The above is a simplified version of conjunctive grammar derivations. The formal definition states that each step of a derivation has one of the following forms:
+
+  • Replacing a variable in the latest word with the body of a rule enclosed in brackets. For example, if the latest word is 'S', applying the rule 'S ⟶ A & C', we get '(A & C)'. Then applying the rule 'A ⟶ aA' yields '((aA) & C)'.
+
+  • Removing redundant brackets. If there are conjuncts in the word enclosed in brackets, where each conjunct is an identical string of terminal symbols, the brackets can be deleted. Some examples:
+
+      (a & a & a) ⟹ a
+
+      (abc) ⟹ abc
+
+      () ⟹ e
+
+
+Now, let's see what the formal derivation of 'abc' in our grammar looks like. To improve readability, the parts of the word where a rule will next be applied are highlighted red.
+
+
+         [color=ff0000]S[/color]
+
+  ⟹  ([color=ff0000]A[/color] & C)
+
+  ⟹  ((a[color=ff0000]A[/color]) & C)
+
+  ⟹  ((a([color=ff0000]B[/color])) & C)
+
+  ⟹  ((a((b[color=ff0000]B[/color]c))) & C)
+
+  ⟹  ((a((b[color=ff0000]([/color][color=ff0000])[/color]c))) & C)
+
+  ⟹  ((a([color=ff0000]([/color]bc[color=ff0000])[/color])) & C)
+
+  ⟹  ((a[color=ff0000]([/color]bc[color=ff0000])[/color]) & C)
+
+  ⟹  ([color=ff0000]([/color]abc[color=ff0000])[/color] & C)
+
+  ⟹  (abc & [color=ff0000]C[/color])
+
+  ⟹  (abc & ([color=ff0000]C[/color]c))
+
+  ⟹  (abc & (([color=ff0000]D[/color])c))
+
+  ⟹  (abc & (((a[color=ff0000]D[/color]b))c))
+
+  ⟹  (abc & (((a[color=ff0000]([/color][color=ff0000])[/color]b))c))
+
+  ⟹  (abc & (([color=ff0000]([/color]ab[color=ff0000])[/color])c))
+
+  ⟹  (abc & ([color=ff0000]([/color]ab[color=ff0000])[/color]c))
+
+  ⟹  (abc & [color=ff0000]([/color]abc[color=ff0000])[/color])
+
+  ⟹  [color=ff0000]([/color]abc & abc[color=ff0000])[/color]
+
+  ⟹  abc
+
+
+£
+Conjunctive grammars are useful as they retain many of the properties of context-free grammars. Many context-free parsing algorithms can be successfully adapted for conjunctive grammars. These algorithms allow us to efficiently determine whether a string belongs to a certain language, and construct a parse
+tree if it does.
+
+
+One well-known parsing algorithm for context-free grammars is CYK. This has a time complexity of O(n[sup]3[/sup]), meaning it is very fast. CYK can be modified to work for conjunctive grammars with the same time complexity.
+
+
+With context-free grammars, we must first convert the grammar into Chomsky Normal Form (CNF) to perform CYK parsing. With conjunctive grammars, the grammar must be in Binary Normal Form (BNF).
+
+
+A conjunctive grammar is in BNF if each rule is in one of the following forms:
+
+  • A ⟶ B[sub]1[/sub]C[sub]1[/sub] & ... & B[sub]m[/sub]C[sub]m[/sub] where m ≥ 1 and A, B[sub]i[/sub], C[sub]i[/sub] are variables
+
+  • A ⟶ a (a single terminal symbol)
+
+  • S ⟶ e if S does not appear on the right-hand side of any rules in R
+
+
+Before applying the CYK algorithm, this program will automatically convert any grammar into an equivalent one in BNF.
+
+
+For example, let's see what our {a[sup]n[/sup]b[sup]n[/sup]c[sup]n[/sup] | n ≥ 0} grammar looks like in BNF:
+
+
+• Σ = {a, b, c}
+
+
+• V = {A, B, C, D, E, F, G, H, I, J, S}
+
+
+• R is the following set of rules:
+
+    J ⟶ IF & HG | IF & FG | EF & HG | HG & CG | CG & EA | CG & FG | EA & EF | EA & IF | e
+    S ⟶ IF & HG | IF & FG | EF & HG | HG & CG | CG & EA | CG & FG | EA & EF | EA & IF
+    A ⟶ HG | EA | FG | a
+    B ⟶ HG | FG
+    C ⟶ EF | IF | CG | c
+    D ⟶ EF | IF
+    E ⟶ a
+    F ⟶ b
+    G ⟶ c
+    H ⟶ FB
+    I ⟶ ED
+
+
+• J is the start variable
+
+
+Once the grammar is in BNF, we follow the CYK algorithm in almost the same way as in the context-free case. The algorithm is described in Okhotin's 2001 paper 'Conjunctive Grammars.'
+
+
+£
+Now you know enough about conjunctive grammars to start playing around with them.
+
+
+You can go back to the last screen and click 'Choose an example grammar'. There are several example conjunctive grammars built into the program. Once you've selected a grammar, you can convert it into Binary Normal Form and run it on any input string you like. Then, if your string belongs to the language, you will see the CYK matrix and a derivation path.
+
+
+You can also try to design your own grammars by selecting the 'Make your own grammar' option. Remember, any context-free grammar is also a conjunctive grammar, so you might want to try creating an ordinary context-free grammar first.
+£
+
+Before introducing the SAPDA, let's recall the definition of the pushdown automata (PDA). In particular, the version of PDA which accepts by empty stack.
+
+
+A PDA is defined as a six-tuple A = (Q, Σ, Γ, δ, q[sub]0[/sub], Z) where
+
+  • Q is a finite set of states
+  • Σ is the input alphabet
+  • Γ is the stack alphabet
+  • δ is the transition function
+  • q[sub]0[/sub] is the initial state
+  • Z is the initial stack symbol
+
+
+The PDA transition function assigns to each element in Q x (Σ ∪ {e}) x Γ a subset of Q x Γ[sup]*[/sup].
+Essentially, this means that with each transition, the following steps are carried out:
+
+  • Read an input symbol or the empty word
+
+  • Move to a new state or remain in the current state
+
+  • Replace the symbol at the top of the stack with some string made from the stack alphabet
+
+
+A PDA configuration is a triple of the form (current state, remaining input to be read, current stack contents). Acceptance is achieved when the configuration is of the form (q, e, e) for some q ∈ Q: in other words, the stack is empty and the input word has been fully read.
+
+
+In this PDA definition, there is no need for accepting states, as the initial stack symbol will only be removed when we are ready to accept the input.
+
+In each transition, we must pop a single symbol from the top of the stack. Then we can push a string to the top of the stack, which can have any length and could be the empty word.
+
+£
+The synchronised alternating pushdown automata (SAPDA) was introduced by Aizikowitz and Kaminski in 2008. It is an automaton model which is equivalent to conjunctive grammars. Where a conjunctive grammar uses conjunctions in its rules, the SAPDA uses conjunctions in its transitions.
+
+
+A SAPDA is defined as a six-tuple A = (Q, Σ, Γ, δ, q[sub]0[/sub], Z) where
+
+  • Q is a finite set of states
+  • Σ is the input alphabet
+  • Γ is the stack alphabet
+  • δ is the transition function
+  • q[sub]0[/sub] is the initial state
+  • Z is the initial stack symbol
+
+The SAPDA transition function assigns to each element in Q x (Σ ∪ {e}) x Γ a subset of {(q[sub]1[/sub], α[sub]1[/sub]) ∧ ... ∧ (q[sub]n[/sub], α[sub]n[/sub]) | n ≥ 1, (q[sub]i[/sub], α[sub]i[/sub]) ∈ Q x Γ[sup]*[/sup], 1 ≤ i ≤ n}
+
+This means that the SAPDA works very similarly to the PDA, but its transitions are different. A SAPDA transition maps (state, letter to read, stack symbol to pop) to conjuncts of (next state, string to push to stack). When there is only one conjunct, then the transition is the same as a normal PDA transition. However, what happens when there is more than one conjunct?
+
+Suppose that our configuration looks like:
+
+[font=FreeMono]
+('q', 'ab', 'ABZ')
+[/font]
+
+We are in state q, with remaining input 'ab' and stack contents 'ABZ'.
+
+Now, we apply the transition δ(q, a, A) = (q, A) ∧ (p, DC) and get the following configuration:
+
+
+[font=FreeMono]
+   ┌─ ('q', 'b', 'A')
+BZ ┤
+   └ ('p', 'b', 'DC')
+[/font]
+
+
+What has happened here? As we read the letter 'a' and popped 'A' from the stack, our configuration splits into a tree with two branches - one for each conjunct of the transition. In one leaf, we remain in state 'q' and push 'A' to the stack. In the other leaf, we go to state 'p' and push 'DC' to the stack. At the root of the tree is 'BZ', which is the remainder of the stack beneath the symbol we just popped.
+
+When the configuration is a tree, as above, each branch is independently processed. For example, let's now apply the transition δ(q, b, A) = (p, B) ∧ (q, e) to the ('q', 'b', 'A') leaf. This yields the following configuration:
+
+
+[font=FreeMono]
+                      ┌ ('p', 'e', 'B')
+   ┌─────────────── e ┤
+BZ ┤                  └ ('q', 'e', 'e')
+   │
+   └ ('p', 'b', 'DC')
+
+[/font]
+
+This is the general idea of how conjunctive transitions are applied in a SAPDA.
+£
+As we have seen, a SAPDA configuration is a labelled tree of internal nodes and leaf nodes.
+
+Internal nodes are labelled with a string representing the stack contents. Leaf nodes are active branches which must be processed, and are labelled by a triple, as in the standard PDA, of (current state, remaining input to be read, current stack contents). A computing step occurs when a transition is applied to a single leaf. If a conjunctive transition is applied, this leaf becomes an internal node and new leaves branch out of it.
+
+
+Acceptance is achieved when the configuration is of the form (q, e, e) for some q ∈ Q: in other words, the tree stack is a single empty leaf node and the input word has been fully read.
+
+
+We have seen how conjunctive transitions cause the configuration to split into a tree. But to obtain an accepting configuration, we require a single leaf. Therefore, we need to collapse branches.
+
+
+To collapse sibling branches into a single branch, three conditions must be satisfied:
+
+  • The stacks of all sibling branches are empty
+  • All sibling branches are in the same state
+  • All sibling branches have read the same input portion.
+
+In this case, these branches are said to be synchronised.
+
+
+Here is an example of a SAPDA configuration with synchronised sibling branches:
+
+
+[font=FreeMono]
+   ┌─ ('q', 'b', 'e')
+BZ ┤
+   └ ('q', 'b', 'e')
+[/font]
+
+
+Both leaves are in the same state 'q', have the same remaining input 'b', and have empty stacks. This tree can be collapsed to a single leaf which inherits the root stack.
+
+
+[font=FreeMono]
+('q', 'b', 'BZ')
+[/font]
+
+
+
+In any computation, the order in which active branches are processed is unimportant, but the following rules must be obeyed:
+
+  • Transitions can only be applied to an active branch.
+
+  • If a branch has an empty stack, no transitions can be applied to it.
+  
+  • If branches are in a synchronised state, they must be collapsed.
+
+
+Let's see an example SAPDA and try to make sense of all this.
+£
+Example SAPDA

@@ -17,8 +17,11 @@ WindowManager:
             size: self.size
             pos: self.pos
     StartWindow:
+    GettingStartedWindow:
     CGWindow:
     SAPDAWindow:
+    CGTutorialWindow:
+    SAPDATutorialWindow:
     ChooseCGWindow:
     ChooseSAPDAWindow:
     MakeCGWindow:
@@ -31,6 +34,7 @@ WindowManager:
 
 
 <RoundedButton@Button>:
+    id: rounded_button
     background_normal: ''
     background_color: (0,0,0,0)
     size_hint: (.8, .4)
@@ -46,11 +50,12 @@ WindowManager:
             radius: [50]
 
 <ReturnStartButton@Button>:
+    id: start
     background_normal: ''
     background_color: (0,0,0,0)
     text: "Return to start"
     font_name: "DejaVuSans.ttf"
-    font_size: 32
+    font_size: start.height*0.26
     pos_hint: {"x": 0.83, "top": 1}
     size_hint: (.15, .1)
     canvas.before:
@@ -71,11 +76,12 @@ WindowManager:
         my_computation = ListProperty(None)
 
 <BackButton@Button>:
+    id: back
     background_normal: ''
     background_color: (0,0,0,0)
     text: "Back"
     font_name: "DejaVuSans.ttf"
-    font_size: 32
+    font_size: back.height*0.26
     pos_hint: {"x": 0.02, "top": 1}
     size_hint: (.15, .1)
     canvas.before:
@@ -86,13 +92,67 @@ WindowManager:
             pos: self.pos
             radius: [40]
 
+
+<PrevTutorialButton@Button>:
+    id: back
+    background_normal: ''
+    background_color: (0,0,0,0)
+    text: "« Previous"
+    font_name: "DejaVuSans.ttf"
+    font_size: back.height*0.26
+    pos_hint: {"x": 0.22, "top": 0.2}
+    size_hint: (.15, .1)
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [40]
+
+
+<NextTutorialButton@Button>:
+    id: next
+    background_normal: ''
+    background_color: (0,0,0,0)
+    font_name: "DejaVuSans.ttf"
+    text: "Next »"
+    font_size: next.height*0.26
+    pos_hint: {"x": 0.62, "top": 0.2}
+    size_hint: (.15, .1)
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [40]
+
+<TutorialPageLabel@Label>:
+    id: page
+    background_normal: ''
+    background_color: (0,0,0,0)
+    font_name: "DejaVuSans.ttf"
+    font_size: page.height*0.26
+    pos_hint: {"x": 0.42, "top": 0.2}
+    size_hint: (.15, .1)
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [40]
+
+
 <RoundedLabel@Label>:
+    id: rounded_label
     background_normal: ''
     background_color: (0,0,0,0)
     markup: True
     font_name: "DejaVuSans.ttf"
     size_hint: (.8, None)
-    text_size: root.width, None
+    #text_size: root.width, None
     size: self.texture_size
     pos_hint: {'center_x': 0.5}
     padding:[30,20]
@@ -113,8 +173,6 @@ WindowManager:
     size: self.texture_size
     pos_hint: {'center_x': 0.5}
     padding:[30,30]
-    #text_size_hint: None, None
-    #halign: 'right'
     canvas.before:
         Color:
             rgba: (48/255, 84/255, 150/255, 1)
@@ -123,8 +181,6 @@ WindowManager:
             pos: self.pos
             radius: [50]
 
-
-<CGTextInput@TextInput>:
 
 
 <StartWindow>:
@@ -144,26 +200,88 @@ WindowManager:
         padding:70
 
         Label:
+            id: main_label
             text: "Conjunctive Grammar & SAPDA Machine"
-            font_size: 76
+            font_size: main_label.height*0.18
 
         RoundedButton:
+            text: "Getting Started"
+            font_size: main_button.height*0.42
+            on_release:
+                app.root.current = "getting_started"
+                root.manager.transition.direction = "left"
+
+        RoundedButton:
+            id: main_button
             text: "Conjunctive Grammars"
-            font_size: 64
+            font_size: main_button.height*0.42
             on_release:
                 app.root.current = "cg"
                 root.manager.transition.direction = "left"
 
         RoundedButton:
             text: "SAPDA"
-            font_size: 64
+            font_size: main_button.height*0.42
             on_release:
                 app.root.current = "sapda"
                 root.manager.transition.direction = "left"
 
-        RoundedButton:
-            text: "Tutorial"
-            font_size: 64
+
+
+
+
+
+<GettingStartedWindow>:
+    name: "getting_started"
+    spacing:20
+    padding:20
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        Label:
+            id: getting_started_label
+            text: "Getting Started"
+            font_size: getting_started_label.height*0.48
+            pos_hint: {"center_x": 0.5, "top": 0.95}
+            size_hint: (.15, .1)
+
+    ScrollView:
+        size_hint_y: .60
+        pos_hint: {'x':0 , 'y':.25}
+        do_scroll_x: False
+        do_scroll_y: True
+
+        GridLayout:
+            size: root.width, root.height
+            size_hint_x: None
+            size_hint_y: None
+            cols: 1
+            height: self.minimum_height
+            spacing:40
+            padding:40
+
+            RoundedLabel:
+                id: start_label
+                text: app.getting_started_txt
+                markup: True
+                size_hint_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]
+                pos_hint: {'x':0.1 , 'top':.85}
+
+
+
 
 
 <CGWindow>:
@@ -190,27 +308,28 @@ WindowManager:
         padding:50
 
         Label:
+            id: cg_label
             text: "Conjunctive Grammars"
-            font_size: 64
+            font_size: cg_label.height*0.18
 
         RoundedButton:
-            text: "Help"
-            # pos_hint: {"x", "y", "top", "bottom", "left", "right"}
-            font_size: 64
-            # on_release:
-            #     app.root.current = "first"
-            #     root.manager.transition.direction = "right"
+            id: cg_button
+            text: "Tutorial"
+            font_size: cg_button.height*0.42
+            on_release:
+                app.root.current = "cg_tutorial"
+                root.manager.transition.direction = "left"
 
         RoundedButton:
             text: "Choose an example grammar"
-            font_size: 64
+            font_size: cg_button.height*0.42
             on_release:
                 app.root.current = "choose_cg"
                 root.manager.transition.direction = "left"
 
         RoundedButton:
             text: "Make your own grammar"
-            font_size: 64
+            font_size: cg_button.height*0.42
             on_release:
                 app.root.current = "make_cg"
                 root.manager.transition.direction = "left"
@@ -240,26 +359,28 @@ WindowManager:
         padding:50
 
         Label:
+            id: sapda_label
             text: "SAPDA"
-            font_size: 64
+            font_size: sapda_label.height*0.18
 
         RoundedButton:
-            text: "Help"
-            font_size: 64
-            # on_release:
-            #     app.root.current = "first"
-            #     root.manager.transition.direction = "right"
+            id: sapda_button
+            text: "Tutorial"
+            font_size: sapda_button.height*0.42
+            on_release:
+                app.root.current = "sapda_tutorial"
+                root.manager.transition.direction = "left"
 
         RoundedButton:
             text: "Choose an example SAPDA"
-            font_size: 64
+            font_size: sapda_button.height*0.42
             on_release:
                 app.root.current = "choose_sapda"
                 root.manager.transition.direction = "left"
 
         RoundedButton:
             text: "Make your own SAPDA"
-            font_size: 64
+            font_size: sapda_button.height*0.42
             on_release:
                 app.root.current = "make_sapda"
                 root.manager.transition.direction = "left"
@@ -295,13 +416,15 @@ WindowManager:
         padding:50
 
         Label:
+            id: choose_cg_label
             text: "Choose an example grammar"
             font_name: "DejaVuSans.ttf"
-            font_size: 64
+            font_size: choose_cg_label.height*0.18
 
         RoundedButton:
+            id: choose_cg_button
             text: app.cg1.name
-            font_size: 32
+            font_size: choose_cg_button.height*0.32
             on_release:
                 app.my_cg = app.cg1
                 app.root.current = "choose_cg_action"
@@ -309,7 +432,7 @@ WindowManager:
 
         RoundedButton:
             text: app.cg2.name
-            font_size: 32
+            font_size: choose_cg_button.height*0.32
             on_release:
                 app.my_cg = app.cg2
                 app.root.current = "choose_cg_action"
@@ -317,7 +440,7 @@ WindowManager:
 
         RoundedButton:
             text: app.cg3.name
-            font_size: 32
+            font_size: choose_cg_button.height*0.32
             on_release:
                 app.my_cg = app.cg3
                 app.root.current = "choose_cg_action"
@@ -325,7 +448,7 @@ WindowManager:
 
         RoundedButton:
             text: app.cg4.name
-            font_size: 32
+            font_size: choose_cg_button.height*0.32
             on_release:
                 app.my_cg = app.cg4
                 app.root.current = "choose_cg_action"
@@ -361,12 +484,14 @@ WindowManager:
         padding:50
 
         Label:
+            id: choose_sapda_label
             text: "Choose an example SAPDA"
-            font_size: 64
+            font_size: choose_sapda_label.height*0.18
 
         RoundedButton:
+            id: choose_sapda_button
             text: app.sapda1.name
-            font_size: 32
+            font_size: choose_sapda_button.height*0.24
             on_release:
                 app.my_sapda = app.sapda1
                 app.root.current = "choose_sapda_action"
@@ -374,7 +499,7 @@ WindowManager:
 
         RoundedButton:
             text: app.sapda2.name
-            font_size: 32
+            font_size: choose_sapda_button.height*0.24
             on_release:
                 app.my_sapda = app.sapda2
                 app.root.current = "choose_sapda_action"
@@ -382,7 +507,7 @@ WindowManager:
 
         RoundedButton:
             text: app.sapda3.name
-            font_size: 32
+            font_size: choose_sapda_button.height*0.24
             on_release:
                 app.my_sapda = app.sapda3
                 app.root.current = "choose_sapda_action"
@@ -415,41 +540,72 @@ WindowManager:
                 root.manager.transition.direction = "right"
 
         Label:
-            text: 'Input grammar rules below'
-            pos_hint: {'center_x':0.5 , 'y':0.8}
+            id: make_cg_label
+            text: 'Make a conjunctive grammar'
+            pos_hint: {'center_x':0.5 , 'y':0.87}
             size_hint: (.35, .10)
             halign: 'center'
             font_name: "DejaVuSans.ttf"
-            font_size: 64
+            font_size: make_cg_label.height*0.38
+
+        RoundedLabel:
+            id: make_cg_help
+            size_hint: 0.5, 0.6
+            pos_hint: {'x':0.1 , 'top':.82}
+            text: app.make_cg_txt
+            markup: True
+            text_size: self.width, None
+            size: self.texture_size
+            font_size: make_cg_help.height*0.04
+
 
         ScrollView:
             id: scroll_view
-            pos_hint: {'center_x':0.5}
-            size_hint: 0.2, 0.75
-            CGTextInput:
-                id: grammar_rules
-                font_name: "DejaVuSans.ttf"
-                text: ''
-                size_hint: 1, 0.5
-                height: max(self.minimum_height, scroll_view.height)
+            size_hint_y: .60
+            pos_hint: {'x':0 , 'y':.25}
+            do_scroll_x: False
+            do_scroll_y: True
+
+
+            GridLayout:
+
+                size: root.width, root.height
+                size_hint_x: None
+                size_hint_y: None
+                cols: 2
+                spacing:40
+                padding:40
+
+                Widget:
+
+                CGTextInput:
+                    id: grammar_rules
+                    font_name: "DejaVuSans.ttf"
+                    text: ''
+                    size_hint: 0.5, 0.5
+                    #height: max(self.minimum_height, scroll_view.height)
+
 
         RoundedButton:
+            id: make_cg_button
             text: "Make grammar"
-            font_size: 48
+            font_size: make_cg_button.height*0.42
             pos_hint: {'center_x':0.5 , 'y':.05}
-            size_hint: (.4, .15)
+            size_hint: (.35, .10)
             width: self.texture_size[0]
             on_release:
-                if grammar_rules.is_valid_input(grammar_rules.text): app.my_cg = grammar_rules.make_user_cg(grammar_rules.text); app.root.current = "choose_cg_action"; root.manager.transition.direction = "left"
+                if grammar_rules.is_valid_cg_input(grammar_rules.text): app.my_cg = grammar_rules.make_user_cg(grammar_rules.text); app.root.current = "choose_cg_action"; root.manager.transition.direction = "left"
                 else: Factory.MakeCGFail().open()
 
         RoundedButton:
+            id: reset_button
             text: "Reset"
-            font_size: 32
-            pos_hint: {'center_x':0.5 , 'y':.3}
+            font_size: reset_button.height*0.52
+            pos_hint: {'center_x':0.82 , 'y':.2}
             size_hint: (.1, .04)
             width: self.texture_size[0]
             on_release: grammar_rules.text = ""
+
 
 
 
@@ -491,50 +647,238 @@ WindowManager:
                 root.manager.transition.direction = "right"
 
         Label:
-            text: 'Input SAPDA transitions below'
-            pos_hint: {'center_x':0.5 , 'y':0.8}
+            id: make_sapda_label
+            text: 'Make a SAPDA'
+            pos_hint: {'center_x':0.5 , 'y':0.87}
             size_hint: (.35, .10)
             halign: 'center'
             font_name: "DejaVuSans.ttf"
-            font_size: 64
+            font_size: make_sapda_label.height*0.38
+
+        RoundedLabel:
+            id: make_sapda_help
+            size_hint: 0.5, 0.6
+            pos_hint: {'x':0.1 , 'top':.82}
+            text: app.make_sapda_txt
+            markup: True
+            text_size: self.width, None
+            size: self.texture_size
+            font_size: make_sapda_help.height*0.04
 
         ScrollView:
             id: scroll_view
-            pos_hint: {'center_x':0.5}
-            size_hint: 0.4, 0.75
-            SAPDATextInput:
-                id: transitions
-                font_name: "DejaVuSans.ttf"
-                text: "δ(□, □, □) = (□, □)"
-                size_hint: 1, 0.5
-                height: max(self.minimum_height, scroll_view.height)
+            size_hint_y: .60
+            pos_hint: {'x':0 , 'y':.25}
+            do_scroll_x: False
+            do_scroll_y: True
+
+
+            GridLayout:
+
+                size: root.width, root.height
+                size_hint_x: None
+                size_hint_y: None
+                cols: 2
+                spacing:40
+                padding:40
+
+                Widget:
+
+                SAPDATextInput:
+                    id: transitions
+                    font_name: "DejaVuSans.ttf"
+                    text: "δ(□, □, □) = (□, □)"
+                    size_hint: 0.5, 0.5
+
 
         RoundedButton:
+            id: make_sapda_button
             text: "Make SAPDA"
-            font_size: 48
-            pos_hint: {'center_x':0.5 , 'y':.05}
+            font_size: make_sapda_button.height*0.34
+            pos_hint: {'center_x':0.5 , 'y':.04}
             size_hint: (.4, .15)
             width: self.texture_size[0]
             on_release:
-                if transitions.is_valid_input(transitions.text): app.my_sapda = transitions.make_user_sapda(transitions.text); app.root.current = "choose_sapda_action"; root.manager.transition.direction = "left"
+                if transitions.is_valid_sapda_input(transitions.text): app.my_sapda = transitions.make_user_sapda(transitions.text); app.root.current = "choose_sapda_action"; root.manager.transition.direction = "left"
                 else: Factory.MakeSAPDAFail().open()
 
 
         RoundedButton:
+            id: add_conj_btn
             text: "Add conjunct"
-            font_size: 32
-            pos_hint: {'center_x':0.4 , 'y':.3}
+            font_size: add_conj_btn.height*0.52
+            pos_hint: {'center_x':0.76 , 'top':.88}
             size_hint: (.17, .04)
             width: self.texture_size[0]
             on_release: transitions.text += " ∧ (□, □)"
 
         RoundedButton:
             text: "Reset"
-            font_size: 32
-            pos_hint: {'center_x':0.6 , 'y':.3}
+            font_size: add_conj_btn.height*0.52
+            pos_hint: {"x": 0.88, "top": 0.88}
             size_hint: (.1, .04)
             width: self.texture_size[0]
             on_release: transitions.text = "δ(□, □, □) = (□, □)"
+
+
+<CGTutorialWindow>:
+    name: "cg_tutorial"
+    spacing:20
+    padding:20
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton:
+            on_release:
+                app.root.current = "cg"
+                root.manager.transition.direction = "right"
+
+        PrevTutorialButton:
+            on_release:
+                sv.scroll_y = 1
+                if current_page.text == "4/4": current_page.text = "3/4" ; cg_tutorial_label.text = "CYK Parsing Algorithm" ; instructions.text = app.cg_tutorial_txt_3
+                elif current_page.text == "3/4": current_page.text = "2/4" ; cg_tutorial_label.text = "Derivations with Conjunctive Grammars" ; instructions.text = app.cg_tutorial_txt_2
+                elif current_page.text == "2/4": current_page.text = "1/4" ; cg_tutorial_label.text = "Introduction to Conjunctive Grammars" ; instructions.text = app.cg_tutorial_txt_1
+
+
+        TutorialPageLabel:
+            id: current_page
+            text: "1/4"
+
+        NextTutorialButton:
+            on_release:
+                sv.scroll_y = 1
+                if current_page.text == "1/4": current_page.text = "2/4" ; cg_tutorial_label.text = "Derivations with Conjunctive Grammars" ; instructions.text = app.cg_tutorial_txt_2
+                elif current_page.text == "2/4": current_page.text = "3/4" ; cg_tutorial_label.text = "CYK Parsing Algorithm" ; instructions.text = app.cg_tutorial_txt_3
+                elif current_page.text == "3/4": current_page.text = "4/4" ; cg_tutorial_label.text = "Try it yourself!" ; instructions.text = app.cg_tutorial_txt_4
+
+
+
+
+        Label:
+            id: cg_tutorial_label
+            text: "Introduction to Conjunctive Grammars"
+            font_size: cg_tutorial_label.height*0.48
+            pos_hint: {"center_x": 0.5, "top": 0.95}
+            size_hint: (.15, .1)
+
+    ScrollView:
+        id: sv
+        size_hint_y: .60
+        pos_hint: {'x':0 , 'y':.25}
+        do_scroll_x: False
+        do_scroll_y: True
+
+        GridLayout:
+            id: gl
+            size: root.width, root.height
+            size_hint_x: None
+            size_hint_y: None
+            cols: 1
+            height: self.minimum_height
+            spacing:40
+            padding:40
+
+            RoundedLabel:
+                id: instructions
+                text: app.cg_tutorial_txt_1
+                markup: True
+                size_hint_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]
+                pos_hint: {'x':0.1 , 'top':.85}
+
+
+
+
+<SAPDATutorialWindow>:
+    name: "sapda_tutorial"
+    spacing:20
+    padding:20
+
+    canvas.before:
+        Color:
+            rgba: 97/255, 192/255, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        ReturnStartButton:
+            on_release:
+                app.root.current = "start"
+                root.manager.transition.direction = "right"
+
+        BackButton:
+            on_release:
+                app.root.current = "sapda"
+                root.manager.transition.direction = "right"
+
+        PrevTutorialButton:
+            on_release:
+                sv.scroll_y = 1
+                if current_page.text == "4/4": current_page.text = "3/4" ; sapda_tutorial_label.text = "Accepting configurations in SAPDA" ; instructions.text = app.sapda_tutorial_txt_3
+                elif current_page.text == "3/4": current_page.text = "2/4" ; sapda_tutorial_label.text = "Introduction to SAPDA" ; instructions.text = app.sapda_tutorial_txt_2
+                elif current_page.text == "2/4": current_page.text = "1/4" ; sapda_tutorial_label.text = "PDA which accepts by empty stack" ; instructions.text = app.sapda_tutorial_txt_1
+
+
+        TutorialPageLabel:
+            id: current_page
+            text: "1/4"
+
+        NextTutorialButton:
+            on_release:
+                sv.scroll_y = 1
+                if current_page.text == "1/4": current_page.text = "2/4" ; sapda_tutorial_label.text = "Introduction to SAPDA" ; instructions.text = app.sapda_tutorial_txt_2
+                elif current_page.text == "2/4": current_page.text = "3/4" ; sapda_tutorial_label.text = "Accepting configurations in SAPDA" ; instructions.text = app.sapda_tutorial_txt_3
+                elif current_page.text == "3/4": current_page.text = "4/4" ; sapda_tutorial_label.text = "Try it yourself!" ; instructions.text = app.sapda_tutorial_txt_4
+
+
+
+
+        Label:
+            id: sapda_tutorial_label
+            text: "PDA which accepts by empty stack"
+            font_size: sapda_tutorial_label.height*0.48
+            pos_hint: {"center_x": 0.5, "top": 0.95}
+            size_hint: (.15, .1)
+
+    ScrollView:
+        id: sv
+        size_hint_y: .60
+        pos_hint: {'x':0 , 'y':.25}
+        do_scroll_x: False
+        do_scroll_y: True
+
+        GridLayout:
+            id: gl
+            size: root.width, root.height
+            size_hint_x: None
+            size_hint_y: None
+            cols: 1
+            height: self.minimum_height
+            spacing:40
+            padding:40
+
+            RoundedLabel:
+                id: instructions
+                text: app.sapda_tutorial_txt_1
+                markup: True
+                size_hint_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]
+                pos_hint: {'x':0.1 , 'top':.85}
 
 
 
@@ -565,8 +909,9 @@ WindowManager:
 
 
         RoundedButton:
+            id: cg_action_button
             text: "Apply CYK algorithm for parsing"
-            font_size: 32
+            font_size: cg_action_button.height*0.18
             pos_hint: {'x':0.1 , 'y':.05}
             size_hint: (.36, .15)
             width: self.texture_size[0]
@@ -577,7 +922,7 @@ WindowManager:
 
         RoundedButton:
             text: "Convert grammar to equivalent SAPDA"
-            font_size: 32
+            font_size: cg_action_button.height*0.18
             pos_hint: {'x':0.5 , 'y':.05}
             size_hint: (.4, .15)
             width: self.texture_size[0]
@@ -605,8 +950,13 @@ WindowManager:
             padding:40
 
             RoundedLabel:
+                id: cg_def_label
+                #font_size:
                 text: str(app.my_cg)
                 pos_hint: {'x':0.1 , 'top':.85}
+                size_hint_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]
 
 
 <CYKPopup@Popup>
@@ -669,7 +1019,9 @@ WindowManager:
                 root.manager.transition.direction = "right"
 
         RoundedLabel:
+            id: bnf_label
             text: 'Converting to Binary Normal Form'
+            font_size: bnf_label.height*0.25
             pos_hint: {'center_x':0.5 , 'y':0.87}
             size_hint: (.35, .10)
             halign: 'center'
@@ -677,8 +1029,9 @@ WindowManager:
         RoundedLabel:
             id: enter_string
             text: "Enter string: "
+            font_size: enter_string.height*0.38
             pos_hint: {'x':0.15 , 'top':.15}
-            size_hint: 0.16, None
+            size_hint: 0.16, 0.06
             halign: "center"
 
         TextInput:
@@ -693,6 +1046,7 @@ WindowManager:
             text: "Parse"
             pos_hint: {'x':0.7 , 'top':.15}
             size_hint: 0.14, 0.06
+            font_size: enter_string.height*0.38
             on_release:
                 if input_str.text == "": app.input_string = "e"
                 else: app.input_string = str(input_str.text)
@@ -702,6 +1056,8 @@ WindowManager:
 
                 Factory.CYKPopup().open()
                 input_str.text = ""
+
+
 
     ScrollView:
         size_hint_y: .60
@@ -723,6 +1079,9 @@ WindowManager:
             RoundedLabel:
                 text: str(app.my_bnf_cg)
                 pos_hint: {'x':0.1 , 'top':.85}
+                size_hint_y: None
+                text_size: self.width, None
+                height: self.texture_size[1]
 
 
 
@@ -771,7 +1130,7 @@ WindowManager:
                 id: rl
                 size_hint_y: None
                 pos_hint: {'x':0.1 , 'top':.80}
-                text_size: self.width, None
+                #text_size: self.width, None
                 height: self.texture_size[1]
                 text: str(app.my_sapda)
 
@@ -796,7 +1155,8 @@ WindowManager:
 
         BackButton
             on_release:
-                app.root.current = "choose_sapda"
+                if app.my_sapda.user_defined: app.root.current = "make_sapda"
+                else: app.root.current = "choose_sapda"
                 root.manager.transition.direction = "right"
 
         RoundedLabel:
@@ -847,12 +1207,11 @@ WindowManager:
             padding:40
 
             RoundedLabel:
-                id: rl
                 size_hint_y: None
-                pos_hint: {'x':0.1 , 'top':.80}
+                pos_hint: {'x':0.1 , 'top':.85}
+                text: str(app.my_sapda)
                 text_size: self.width, None
                 height: self.texture_size[1]
-                text: str(app.my_sapda)
 
 
 
