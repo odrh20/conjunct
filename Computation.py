@@ -238,13 +238,6 @@ class Computation:
             if self.is_rejecting_config():
                 return False, True
 
-            # If the configuration is a single leaf, run the transition:
-            # if self.is_leaf:
-            #     letter, conjuncts = self.transition_dict[self.configuration.get_dict_key()][0]
-            #     new_config = self.configuration.run_leaf_transition(letter, self.configuration.stack[0], conjuncts)
-            #     self.update(new_config)
-            #     # if self.is_loop_transition(letter, conjuncts):
-            #     #     return self.check_accept_reject()
 
             for leaf in self.configuration.get_active_branches():
                 if leaf.get_dict_key() in self.transition_dict and len(self.transition_dict[leaf.get_dict_key()]) == 1:
@@ -252,8 +245,7 @@ class Computation:
                     new_config = self.configuration.find_leaf_for_transition(leaf, letter, conjuncts)
                     self.update(new_config)
                     self.synchronise_loop()
-                    # if self.is_loop_transition(leaf, letter, conjuncts):
-                    #     return self.check_accept_reject()
+
 
         # There is no deterministic transition available
 
@@ -288,14 +280,15 @@ class Computation:
         #print("Current config: ", self.configuration.get_denotation())
         try:
             return self.dfs()
-        except (RecursionError, FunctionTimedOut, RuntimeError):
+        except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
             print("\nDepth-first search didn't work. Now trying breadth-first search.\n")
             try:
                 return Computation(self.sapda, self.input_string).bfs()
             except FunctionTimedOut:
                  print("\nCouldn't find a solution.\n")
 
-    @func_set_timeout(30)
+
+    @func_set_timeout(20)
     def dfs(self, depth=0, path=None):
 
         if path is None:
@@ -338,6 +331,7 @@ class Computation:
         last_self.transition_dict[last_leaf.get_dict_key()].remove((tried_letter, tried_conjuncts))
         return last_self.dfs(depth - 1, path)
 
+
     @func_set_timeout(40)
     def bfs(self):
         #print("CALLING BFS")
@@ -365,7 +359,8 @@ class Computation:
                     accept, reject = new_self.run_deterministic_transitions()
                     if accept:
                         #print("Word accepted!\n")
-                        return new_self.print_computation()
+                        return new_self.get_computation_list()
+
                     if reject:
                         continue
                     #if new_self in paths.queue:
@@ -379,7 +374,7 @@ class Computation:
 
 # words with equal number of a's, b's and c's
 sapda2 = SAPDA(
-    name="Equal number of a's, b's and c's. {w ∈ Σ* | |w|a = |w|b = |w|c}",
+    name="Equal number of a's, b's and c's: {w ∈ Σ[sup]*[/sup] | |w|[sub]a[/sub] = |w|[sub]b[/sub] = |w|[sub]c[/sub]}",
     states={'q0', 'q1', 'q2'},
     input_alphabet={'a', 'b', 'c'},
     stack_alphabet={'Z', 'a', 'b', 'c'},
@@ -401,7 +396,7 @@ sapda2 = SAPDA(
 
 # a^n b^n c^n (n > 0) : this is a deterministic SAPDA
 sapda1 = SAPDA(
-    name="Blocks of a's, b's and c's of equal length. {a^n b^n c^n | n > 0}",
+    name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n ≥ 0}",
     states={'q0', 'qbc+', 'qbc-', 'qac+', 'qac-', 'qb'},
     input_alphabet={'a', 'b', 'c'},
     stack_alphabet={'Z', 'A'},
@@ -459,7 +454,7 @@ sapda3_ = SAPDA(
 
 # {w$w : w∈ {a,b}∗} Reduplication with centre marker
 sapda3 = SAPDA(
-    name="Reduplication with centre marker: {w$w | w ∈ {a, b}*}",
+    name="Reduplication with centre marker: {w$w | w ∈ {a, b}[sup]*[/sup]}",
     states={'q0', 'ql', 'q', 'qw', 'qe', 'qa1', 'qa2', 'qb1', 'qb2'},
     input_alphabet={'a', 'b', '$'},
     stack_alphabet={'Z', '#'},

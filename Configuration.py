@@ -330,17 +330,19 @@ class Tree(Configuration):
 
     def find_leaf_for_transition(self, leaf, letter, conjuncts):
         """
-        Given a leaf and transition, carries out this transition on any matching leaves in the tree
+        Given a leaf and transition, find a matching leaf in the tree and apply transition to it.
         """
 
-        new_children = []
-        for child in self.children:
-            if child == leaf:
-                new_children.append(child.run_leaf_transition(letter, child.stack[0], conjuncts))
-            elif isinstance(child, Leaf):
-                new_children.append(child)
-            elif isinstance(child, Tree):
-                new_children.append(child.find_leaf_for_transition(leaf, letter, conjuncts))
+        new_children = self.children
+        for i in range(len(new_children)):
+
+            if new_children[i] == leaf:
+                new_children[i] = new_children[i].run_leaf_transition(letter, new_children[i].stack[0], conjuncts)
+                break
+
+            elif isinstance(new_children[i], Tree):
+                new_children[i] = new_children[i].find_leaf_for_transition(leaf, letter, conjuncts)
+
         return Tree(self.sapda, self.stack, new_children)
 
     def get_tree_structure(self):
