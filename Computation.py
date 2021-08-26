@@ -284,8 +284,8 @@ class Computation:
             print("\nDepth-first search didn't work. Now trying breadth-first search.\n")
             try:
                 return Computation(self.sapda, self.input_string).bfs()
-            except FunctionTimedOut:
-                 print("\nCouldn't find a solution.\n")
+            except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
+                 return ['timeout']
 
 
     @func_set_timeout(20)
@@ -307,6 +307,7 @@ class Computation:
 
                 if accept:
                     #print("Word accepted!\n")
+                    #self_.print_computation()
                     return self_.get_computation_list()
 
                 if reject:
@@ -332,7 +333,7 @@ class Computation:
         return last_self.dfs(depth - 1, path)
 
 
-    @func_set_timeout(40)
+    @func_set_timeout(20)
     def bfs(self):
         #print("CALLING BFS")
 
@@ -580,8 +581,9 @@ sapda7 = SAPDA(
     input_alphabet={'a'},
     stack_alphabet={'S', 'a'},
     transitions={
-        'q': {'a': {'a': {(('q', 'e'),)}},
+        'q': {
               'S': {'e': {(('q', 'aaS'), ('q', 'aSa')), (('q', 'a'),)}},
+              'a': {'a': {(('q', 'e'),)}}
               }
     },
     initial_state='q',
@@ -589,11 +591,11 @@ sapda7 = SAPDA(
 )
 
 
-# print(sapda4)
+#print(sapda2)
 #sapda = Computation(sapda3, 'abbab$abbab')
-#sapda = Computation(sapda4, '0000000000000000')
+#sapda = Computation(sapda7, 'abc')
 # # #
-#print(sapda.run_machine())
+#sapda.run_machine()
 # #
 
 

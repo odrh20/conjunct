@@ -54,8 +54,7 @@ This looks a lot like the definition of context-free grammars. The only differen
 If a rule has just a single conjunct, then it works exactly like a context-free grammar rule. For example, we could have a rule 'A ⟶ B'.
 
 
-But how about a rule with multiple conjuncts? For example, we could have a rule A ⟶ B & C. After applying
-this rule, the derivation has now been split into two independent paths.
+But how about a rule with multiple conjuncts? For example, we could have a rule A ⟶ B & C. After applying this rule, the derivation has now been split into two independent paths.
 
 
 To achieve a successful derivation, all of the paths must eventually agree with each other in order to collapse to a single term.
@@ -237,7 +236,7 @@ Essentially, this means that with each transition, the following steps are carri
 A PDA configuration is a triple of the form (current state, remaining input to be read, current stack contents). Acceptance is achieved when the configuration is of the form (q, e, e) for some q ∈ Q: in other words, the stack is empty and the input word has been fully read.
 
 
-In this PDA definition, there is no need for accepting states, as the initial stack symbol will only be removed when we are ready to accept the input.
+In this PDA definition, there is no need for accepting states, as the stack will only be emptied when we are ready to accept the input.
 
 In each transition, we must pop a single symbol from the top of the stack. Then we can push a string to the top of the stack, which can have any length and could be the empty word.
 
@@ -333,13 +332,289 @@ Both leaves are in the same state 'q', have the same remaining input 'b', and ha
 
 In any computation, the order in which active branches are processed is unimportant, but the following rules must be obeyed:
 
-  • Transitions can only be applied to an active branch.
+  • Transitions can only be applied to an active branch, that is to say, a leaf labelled with (state, remaining input, stack)
 
   • If a branch has an empty stack, no transitions can be applied to it.
-  
+
   • If branches are in a synchronised state, they must be collapsed.
 
 
-Let's see an example SAPDA and try to make sense of all this.
 £
-Example SAPDA
+Let's look at a simple SAPDA which accepts strings of odd length made of the letter a. For example, it accepts 'a', 'aaa', 'aaaaa' and so on. Note that this is just a context-free language, so we could make a PDA without conjunctive transitions to recognise it.
+
+
+States:
+   {q}
+
+Input Alphabet:
+   {a}
+
+Stack Alphabet:
+   {S, a}
+
+Initial State:
+   q
+
+Initial Stack Symbol:
+   S
+
+Transitions:
+   1.  δ(q, e, S) = (q, a), (q, aaS) ∧ (q, aSa)
+   2.  δ(q, a, a) = (q, e)
+
+
+The transitions are grouped according to the left-hand side of the transition function - δ(current state, letter to read, stack symbol to pop).
+
+
+Let's test out this SAPDA on the input string 'aaa'.
+
+
+We start out in the initial configuration: state 'q', remaining input 'aaa', current stack 'S'
+
+
+[font=FreeMono]
+ ('q', 'aaa', 'S')
+[/font]
+
+
+We have a choice of two transitions: this is a non-deterministic SAPDA. We choose to take the conjunctive transition δ(q, e, S) = (q, aaS) ∧ (q, aSa). Below is the next configuration.
+
+
+[font=FreeMono]
+   ┌ ('q', 'aaa', 'aaS')
+ e ┤
+   └ ('q', 'aaa', 'aSa')
+[/font]
+
+
+Now there are two separate leaves to process. The order in which they are processed doesn't matter. Let's process the top one first, and then the bottom one.
+
+
+[font=FreeMono]
+   ┌ ('q', 'aa', 'aS')    <-- Read 'a', pop 'a', push empty word
+ e ┤
+   └ ('q', 'aaa', 'aSa')
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q', 'a', 'S')    <-- Read 'a', pop 'a', push empty word
+ e ┤
+   └ ('q', 'aaa', 'aSa')
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q', 'a', 'a')    <-- Read empty word, pop 'S', push 'a'
+ e ┤
+   └ ('q', 'aaa', 'aSa')
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q', 'e', 'e')    <-- Read 'a', pop 'a', push empty word
+ e ┤
+   └ ('q', 'aaa', 'aSa')
+[/font]
+
+
+OK, now the top leaf has an empty stack, so we cannot do anything else to it. Let's look at the bottom leaf.
+
+
+[font=FreeMono]
+   ┌ ('q', 'e', 'e')
+ e ┤
+   └ ('q', 'aa', 'Sa')    <-- Read 'a', pop 'a', push empty word
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q', 'e', 'e')
+ e ┤
+   └ ('q', 'aa', 'aa')    <-- Read empty word, pop 'S', push 'a'
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q', 'e', 'e')
+ e ┤
+   └ ('q', 'a', 'a')    <-- Read 'a', pop 'a', push empty word
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q', 'e', 'e')
+ e ┤
+   └ ('q', 'e', 'e')    <-- Read 'a', pop 'a', push empty word
+[/font]
+
+
+Now, both leaves are synchronised, as they have the same state, same remaining input 'e', and have emptied their stacks. The next step collapses them to a single leaf, inheriting the root stack, which is also empty.
+
+
+[font=FreeMono]
+ ('q', 'e', 'e')
+[/font]
+
+
+As there is a single leaf, with no remaining input and empty stack, we have reached an accepting configuration! Therefore, we accept the string 'aaa'.
+
+If we tried to compute an even length string, such as 'aa', we would not be able to reach the configuration ('q', 'e', 'e') no matter what we tried to do. Eventually, after trying all possible transitions, we would conclude that the string should be rejected.
+
+£
+Next, let's look at a SAPDA which recognises a non-context-free language. In this case, the conjunctive transitions are essential: we cannot make an ordinary PDA for this language.
+
+
+This is the language of strings with equal number of a's, b's and c's: {w ∈ Σ[sup]*[/sup] | |w|[sub]a[/sub] = |w|[sub]b[/sub] = |w|[sub]c[/sub]}
+
+States:
+   {q0, q1, q2}
+
+Input Alphabet:
+   {a, b, c}
+
+Stack Alphabet:
+   {Z, a, b, c}
+
+Initial State:
+   q0
+
+Initial Stack Symbol:
+   Z
+
+Transitions:
+   1.  δ(q0, e, Z) = (q1, Z) ∧ (q2, Z)
+
+   2.  δ(q1, a, Z) = (q1, aZ)
+   3.  δ(q1, b, Z) = (q1, bZ)
+   4.  δ(q1, c, Z) = (q1, Z)
+   5.  δ(q1, e, Z) = (q0, e)
+   6.  δ(q1, a, a) = (q1, aa)
+   7.  δ(q1, b, a) = (q1, e)
+   8.  δ(q1, c, a) = (q1, a)
+   9.  δ(q1, a, b) = (q1, e)
+   10.  δ(q1, b, b) = (q1, bb)
+   11.  δ(q1, c, b) = (q1, b)
+
+   12.  δ(q2, a, Z) = (q2, Z)
+   13.  δ(q2, b, Z) = (q2, bZ)
+   14.  δ(q2, c, Z) = (q2, cZ)
+   15.  δ(q2, e, Z) = (q0, e)
+   16.  δ(q2, a, b) = (q2, b)
+   17.  δ(q2, b, b) = (q2, bb)
+   18.  δ(q2, c, b) = (q2, e)
+   19.  δ(q2, a, c) = (q2, c)
+   20.  δ(q2, b, c) = (q2, e)
+   21.  δ(q2, c, c) = (q2, cc)
+
+
+There are a lot of different transitions, so it might look complicated. However, this is a deterministic SAPDA, so the computation is quite easy, because there is never more than one available transition for any leaf.
+
+
+The only conjunctive transition is the one from the initial configuration. This opens up two branches - one in state 'q1', and one in state 'q2'. The 'q1' branch is responsible for ensuring that |w|[sub]a[/sub] = |w|[sub]b[/sub], and the 'q2' branch is responsible for ensuring that |w|[sub]b[/sub] = |w|[sub]c[/sub]. The SAPDA will accept only the intersection of these two languages, in which |w|[sub]a[/sub] = |w|[sub]b[/sub] = |w|[sub]c[/sub].
+
+
+Let's test out this SAPDA on the input string 'abc'.
+
+
+We start out in the initial configuration: state 'q0', remaining input 'abc', current stack 'Z', and take the conjunctive transition δ(q0, e, Z) = (q1, Z) ∧ (q2, Z).
+
+
+[font=FreeMono]
+ ('q0', 'abc', 'Z')
+[/font]
+
+
+[font=FreeMono]
+   ┌ ('q1', 'abc', 'Z')
+ e ┤
+   └ ('q2', 'abc', 'Z')
+[/font]
+
+
+We process the top branch until it empties its stack.
+
+
+
+[font=FreeMono]
+   ┌ ('q1', 'bc', 'aZ')    <-- Read 'a', pop 'Z', push 'aZ'
+ e ┤
+   └ ('q2', 'abc', 'Z')
+
+
+
+   ┌ ('q1', 'c', 'Z')    <-- Read 'b', pop 'a', push empty word
+ e ┤
+   └ ('q2', 'abc', 'Z')
+
+
+
+   ┌ ('q1', 'e', 'Z')    <-- Read 'c', pop 'Z', push 'Z'
+ e ┤
+   └ ('q2', 'abc', 'Z')
+
+
+
+   ┌ ('q0', 'e', 'e')    <-- Read empty word, pop 'Z', push empty word, go to state 'q0'
+ e ┤
+   └ ('q2', 'abc', 'Z')
+[/font]
+
+
+
+Now we process the bottom branch.
+
+
+
+[font=FreeMono]
+   ┌ ('q0', 'e', 'e')
+ e ┤
+   └ ('q2', 'bc', 'Z')   <-- Read 'a', pop 'Z', push 'Z'
+
+
+
+   ┌ ('q0', 'e', 'e')
+ e ┤
+   └ ('q2', 'c', 'bZ')   <-- Read 'b', pop 'Z', push 'bZ'
+
+
+
+   ┌ ('q0', 'e', 'e')
+ e ┤
+   └ ('q2', 'e', 'Z')    <-- Read 'c', pop 'b', push empty word
+
+
+
+   ┌ ('q0', 'e', 'e')
+ e ┤
+   └ ('q0', 'e', 'e')    <-- Read empty word, pop 'Z', push empty word, go to state 'q0'
+[/font]
+
+
+
+Now we collapse the synchronised branches.
+
+
+
+[font=FreeMono]
+ ('q0', 'e', 'e')
+[/font]
+
+
+Input string 'abc is accepted!'
+
+
+£
+That's how the SAPDA works.
+
+
+You can go back to the last screen and click 'Choose an example SAPDA'. There are several example SAPDAs built into the program. Once you've selected a SAPDA, you can try running it on input strings. Then, if your string belongs to the language, you will see the computation path.
+
+
+You can also try to design your own automata by selecting the 'Make your own SAPDA' option. Remember, a pushdown automaton is also a SAPDA, so you might want to try creating an ordinary pushdown automaton first.
+
+
+At the moment, this program only works with SAPDAs that accept by emptying their stack, without using accepting states. Just like for the PDA, there is an equivalent definition of SAPDA with accepting states, but this has not been implemented here.
+
+
+Warning: the algorithm for performing SAPDA computations is not perfect. For non-deterministic SAPDAs with many different possible transitions, it may time out for strings above a certain length.

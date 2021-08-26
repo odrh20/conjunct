@@ -26,6 +26,7 @@ import re
 file = open("instructions.txt")
 
 
+
 # Define the different screens
 
 class StartWindow(Screen):
@@ -292,6 +293,8 @@ class ConjunctApp(App):
     sapda_tutorial_txt_2 = StringProperty(instructions[8])
     sapda_tutorial_txt_3 = StringProperty(instructions[9])
     sapda_tutorial_txt_4 = StringProperty(instructions[10])
+    sapda_tutorial_txt_5 = StringProperty(instructions[11])
+    sapda_tutorial_txt_6 = StringProperty(instructions[12])
 
 
 

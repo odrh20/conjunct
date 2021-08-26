@@ -663,7 +663,7 @@ WindowManager:
             markup: True
             text_size: self.width, None
             size: self.texture_size
-            font_size: make_sapda_help.height*0.04
+            font_size: make_sapda_help.height*0.036
 
         ScrollView:
             id: scroll_view
@@ -828,21 +828,25 @@ WindowManager:
         PrevTutorialButton:
             on_release:
                 sv.scroll_y = 1
-                if current_page.text == "4/4": current_page.text = "3/4" ; sapda_tutorial_label.text = "Accepting configurations in SAPDA" ; instructions.text = app.sapda_tutorial_txt_3
-                elif current_page.text == "3/4": current_page.text = "2/4" ; sapda_tutorial_label.text = "Introduction to SAPDA" ; instructions.text = app.sapda_tutorial_txt_2
-                elif current_page.text == "2/4": current_page.text = "1/4" ; sapda_tutorial_label.text = "PDA which accepts by empty stack" ; instructions.text = app.sapda_tutorial_txt_1
+                if current_page.text == "6/6": current_page.text = "5/6" ; sapda_tutorial_label.text = "Example SAPDA #2" ; instructions.text = app.sapda_tutorial_txt_5
+                elif current_page.text == "5/6": current_page.text = "4/6" ; sapda_tutorial_label.text = "Example SAPDA #1" ; instructions.text = app.sapda_tutorial_txt_4
+                elif current_page.text == "4/6": current_page.text = "3/6" ; sapda_tutorial_label.text = "Accepting configurations in SAPDA" ; instructions.text = app.sapda_tutorial_txt_3
+                elif current_page.text == "3/6": current_page.text = "2/6" ; sapda_tutorial_label.text = "Introduction to SAPDA" ; instructions.text = app.sapda_tutorial_txt_2
+                elif current_page.text == "2/6": current_page.text = "1/6" ; sapda_tutorial_label.text = "PDA which accepts by empty stack" ; instructions.text = app.sapda_tutorial_txt_1
 
 
         TutorialPageLabel:
             id: current_page
-            text: "1/4"
+            text: "1/6"
 
         NextTutorialButton:
             on_release:
                 sv.scroll_y = 1
-                if current_page.text == "1/4": current_page.text = "2/4" ; sapda_tutorial_label.text = "Introduction to SAPDA" ; instructions.text = app.sapda_tutorial_txt_2
-                elif current_page.text == "2/4": current_page.text = "3/4" ; sapda_tutorial_label.text = "Accepting configurations in SAPDA" ; instructions.text = app.sapda_tutorial_txt_3
-                elif current_page.text == "3/4": current_page.text = "4/4" ; sapda_tutorial_label.text = "Try it yourself!" ; instructions.text = app.sapda_tutorial_txt_4
+                if current_page.text == "1/6": current_page.text = "2/6" ; sapda_tutorial_label.text = "Introduction to SAPDA" ; instructions.text = app.sapda_tutorial_txt_2
+                elif current_page.text == "2/6": current_page.text = "3/6" ; sapda_tutorial_label.text = "Accepting configurations in SAPDA" ; instructions.text = app.sapda_tutorial_txt_3
+                elif current_page.text == "3/6": current_page.text = "4/6" ; sapda_tutorial_label.text = "Example SAPDA #1" ; instructions.text = app.sapda_tutorial_txt_4
+                elif current_page.text == "4/6": current_page.text = "5/6" ; sapda_tutorial_label.text = "Example SAPDA #2" ; instructions.text = app.sapda_tutorial_txt_5
+                elif current_page.text == "5/6": current_page.text = "6/6" ; sapda_tutorial_label.text = "Try it yourself!" ; instructions.text = app.sapda_tutorial_txt_6
 
 
 
@@ -1183,7 +1187,8 @@ WindowManager:
                 else: app.input_string = str(input_str.text)
 
                 app.my_computation = Computation(app.my_sapda, app.input_string).run_machine()
-                if len(app.my_computation) > 0: Factory.SAPDASuccessPopup().open()
+                if app.my_computation == ['timeout']: Factory.SAPDATimeOutPopup().open()
+                elif len(app.my_computation) > 0: Factory.SAPDASuccessPopup().open()
                 else: Factory.SAPDAFailPopup().open()
 
                 #input_str.text = ""
@@ -1258,5 +1263,10 @@ WindowManager:
     auto_dismiss: True
     size_hint: 0.4, 0.2
     title: "Word rejected!"
-    on_dismiss:
-        app.my_parser = ObjectProperty(None)
+
+<SAPDATimeOutPopup@Popup>
+    spacing:50
+    padding:50
+    auto_dismiss: True
+    size_hint: 0.4, 0.2
+    title: "Oops. Search algorithm timed out."
