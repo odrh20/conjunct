@@ -91,9 +91,7 @@ class Parser:
                     node_set = node_set.union(new_nodes)
                     self.table[i, j] = self.get_node_set(node_set, i, j)
 
-        # for node in list(self.table[0, self.n-1]):
-        #     if node.variable != self.grammar.start_variable:
-        #         self.table[0, self.n - 1].remove(node)
+
 
     def compute_diagonal(self):
         for i in range(self.n):
@@ -103,6 +101,7 @@ class Parser:
                     new_node = MatrixNode(i, i, variable)
                     new_node.update_pointers(self.word[i], None, None)
                     self.table[i, i].add(new_node)
+        print(self.table)
 
     def get_matrix(self):
 
@@ -229,17 +228,5 @@ class MatrixNode:
         return tuple(expansion)
 
     def __repr__(self):
+        print(f"i: {self.i}, j: {self.j}, var: {self.variable}, pointers: {tuple(self.pointers)}")
         return self.variable
-
-#
-#p = Parser(cg1.convert_to_BNF(), 'e')
-
-
-# if p.recognise_word():
-#     print("Recognise word")
-#     print(p.find_parse())
-#
-#
-#
-#
-#print(p.find_parse())

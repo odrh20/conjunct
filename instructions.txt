@@ -1,6 +1,6 @@
 Welcome to Conjunct: a program for learning about conjunctive grammars and synchronised alternating pushdown automata (SAPDA).
 
-Conjunctive grammars are a lot like context-free grammars, but they have one extra feature: the use of conjunctions in their rules. This allows us to make conjunctive grammars to describe some languages which are not context-free.
+Conjunctive grammars are a lot like context-free grammars, but they have one extra feature: the use of conjunctions in their rules. Therefore conjunctive grammars have more expressive power than context-free grammars. We can make conjunctive grammars to describe some languages which are not context-free.
 
 The SAPDA is an equivalent computational model which recognises the same class of languages. It is similar to the pushdown automaton (PDA), but it can use conjunctions in its transitions.
 
@@ -96,7 +96,7 @@ The above is a simplified version of conjunctive grammar derivations. The formal
 
   • Replacing a variable in the latest word with the body of a rule enclosed in brackets. For example, if the latest word is 'S', applying the rule 'S ⟶ A & C', we get '(A & C)'. Then applying the rule 'A ⟶ aA' yields '((aA) & C)'.
 
-  • Removing redundant brackets. If there are conjuncts in the word enclosed in brackets, where each conjunct is an identical string of terminal symbols, the brackets can be deleted. Some examples:
+  • Collapsing identical terminal strings. If there are conjuncts in the word enclosed in brackets, where each conjunct is an identical string of terminal symbols, the conjuncts reduce to a single string and the brackets are deleted. Some examples:
 
       (a & a & a) ⟹ a
 

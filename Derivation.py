@@ -2,7 +2,7 @@ import copy
 import random
 from CG import *
 from Word import *
-from Parser import *
+#from Parser import *
 from tabulate import tabulate
 
 import sys

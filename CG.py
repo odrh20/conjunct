@@ -10,13 +10,6 @@ class CG:
                  name=None, user_defined=False, chars=None):
         """Instantiate Conjunctive Grammar object"""
 
-        # if user_input:
-        #
-            # self.name = self.name_CG()
-            # self.start_variable, self.variables = self.set_variables()
-            # self.terminals = self.set_terminals()
-            # self.rules = dict()
-            # self.rules = self.add_rules()
 
         self.name = name
         self.variables = self.set_all_str(variables)
@@ -26,7 +19,6 @@ class CG:
         self.user_defined = user_defined
 
         if chars is None:
-            #char_string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%*+,-./:;<=>?@[]^_`{}~'
             upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
             lower = 'abcdefghijklmnopqrstuvwxyz'
             self.chars = []
@@ -238,24 +230,37 @@ class CG:
                     nullable.add(variable)
                     break
 
-        for variable in self.rules:
-            if variable not in nullable:
-                for expansion in self.rules[variable]:
-                    if len(expansion) == 1 and expansion[0] in nullable:
-                        nullable.add(variable)
-                        break
 
-        for variable in self.rules:
-            if variable not in nullable:
-                for expansion in self.rules[variable]:
-                    to_add = True
-                    for conjunct in expansion:
-                        for letter in conjunct:
-                            if letter not in nullable:
-                                to_add = False
-                    if to_add:
-                        nullable.add(variable)
-                        break
+        continue_loop = True
+        while continue_loop:
+            continue_loop = False
+
+            for variable in self.rules:
+                if variable not in nullable:
+                    for expansion in self.rules[variable]:
+                        if len(expansion) == 1 and expansion[0] in nullable:
+                            nullable.add(variable)
+                            continue_loop = True
+                            break
+
+        continue_loop = True
+        while continue_loop:
+            continue_loop = False
+
+            for variable in self.rules:
+                if variable not in nullable:
+                    for expansion in self.rules[variable]:
+                        to_add = True
+                        for conjunct in expansion:
+                            for letter in conjunct:
+                                if letter not in nullable:
+                                    to_add = False
+                        if to_add:
+                            nullable.add(variable)
+                            continue_loop = True
+                            break
+                            
+        print(f"nullable set: {nullable}")
         return nullable
 
     def get_null_expansions(self, expansion):
@@ -476,14 +481,16 @@ class CG:
         #print(self_)
         return self_
 
+#  name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n ≥ 0}",
+
 
 cg1 = CG(
-    name="Blocks of a's, b's and c's of equal length. {a^n b^n c^n | n >= 0}",
+    name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n ≥ 0}",
     terminals={'a', 'b', 'c'},
     variables={'S', 'A', 'B', 'C', 'D'},
     start_variable='S',
     rules={
-        'S': {('A', 'C'), ('e', )},
+        'S': {('A', 'C')},
         'A': {('aA', ), ('B', )},
         'B': {('bBc', ), ('e', )},
         'C': {('Cc', ), ('D', )},
@@ -491,8 +498,10 @@ cg1 = CG(
     },
 )
 
+
+
 cg2 = CG(
-    name="Cross agreement language: a^m b^n c^m d^n (n>=0)",
+    name="Cross agreement language: {a[sup]m[/sup] b[sup]n[/sup] c[sup]m[/sup] d[sup]n[/sup] | n ≥ 0}",
     terminals={'a', 'b', 'c', 'd'},
     variables={'S', 'A', 'B', 'C', 'D', 'X', 'Y'},
     start_variable='S',
@@ -508,7 +517,7 @@ cg2 = CG(
 )
 
 cg3 = CG(
-    name="Reduplication with centre marker: {w$w | w ∈ {a, b}*}",
+    name="Reduplication with centre marker: {w$w | w ∈ {a, b}[sup]*[/sup]}",
     terminals={'a', 'b', '$'},
     variables={'S', 'A', 'B', 'C', 'D', 'E'},
     start_variable='S',
@@ -523,7 +532,7 @@ cg3 = CG(
 )
 
 cg4 = CG(
-    name="Strings of a's where the length is a power of 4. a^(4n)",
+    name="Strings of a's where the length is a power of 4: {a[sup]4[sup]n[/sup][/sup] | n ≥ 0}",
     terminals={'a'},
     variables={'A', 'B', 'C', 'D'},
     start_variable='A',
@@ -556,19 +565,3 @@ cg6 = CG(
         'B': {('b',)}
     },
 )
-
-
-#
-# print(cg3.is_in_BNF())
-# cg3.convert_to_BNF()
-# print(cg3.is_in_BNF())
-
-# print(cg4.is_in_BNF())
-# cg4.convert_to_BNF()
-# print(cg4.is_in_BNF())
-#
-# print(cg1.chars)
-
-# print(cg6)
-#
-# print(cg6.convert_to_BNF())

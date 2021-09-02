@@ -281,11 +281,11 @@ class Computation:
         try:
             return self.dfs()
         except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
-            print("\nDepth-first search didn't work. Now trying breadth-first search.\n")
-            try:
-                return Computation(self.sapda, self.input_string).bfs()
-            except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
-                 return ['timeout']
+            return ['timeout']
+            # try:
+            #     return Computation(self.sapda, self.input_string).bfs()
+            # except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
+            #      return ['timeout']
 
 
     @func_set_timeout(20)
@@ -317,6 +317,7 @@ class Computation:
                         else:
                             # Need to backtrack
                             return self.backtrack(path, depth)
+
 
                 if not (accept or reject):
                     path.append((leaf, letter, conjuncts, self.configuration, self.computation, self.transition_dict, self.is_leaf))
@@ -395,9 +396,14 @@ sapda2 = SAPDA(
     initial_stack_symbol='Z'
 )
 
+#  name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n > 0}",
+
 # a^n b^n c^n (n > 0) : this is a deterministic SAPDA
+
+
+
 sapda1 = SAPDA(
-    name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n ≥ 0}",
+    name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n > 0}",
     states={'q0', 'qbc+', 'qbc-', 'qac+', 'qac-', 'qb'},
     input_alphabet={'a', 'b', 'c'},
     stack_alphabet={'Z', 'A'},
@@ -593,14 +599,22 @@ sapda7 = SAPDA(
 
 #print(sapda2)
 #sapda = Computation(sapda3, 'abbab$abbab')
-#sapda = Computation(sapda7, 'abc')
+sapda = Computation(sapda2, 'cba')
 # # #
-#sapda.run_machine()
+sapda.run_machine()
 # #
+print(sapda.computation)
+
+
+leaf1 = Leaf(sapda1, ['Z'], 'q0', 'abc')
+
+leaf2 = Leaf(sapda1, ['Z'], 'qbc+', 'abc')
+leaf3 = Leaf(sapda1, ['Z'], 'qac+', 'abc')
+tree1 = Tree(sapda1, ['e'], [leaf2, leaf3])
 
 
 # leaf1 = Leaf(sapda1, ['e'], 'q0', 'abc')
-# print(leaf1.print_tree())
+print(tree1.print_tree())
 # leaf2 = Leaf(sapda1, ['Z'], 'q0', 'abc')
 # leaf3 = Leaf(sapda1, ['Z'], 'q1', 'abc')
 # subtree1 = Tree(sapda1, ['a', 'Z'], [leaf1, leaf1])
