@@ -7,7 +7,7 @@ from functools import reduce
 from itertools import (chain, takewhile)
 
 from SAPDA import SAPDA
-from Structure import *
+from Configuration import *
 
 '''
                ┌ Epsilon
@@ -183,36 +183,8 @@ def drawTree2(blnCompact):
 #             ])
 #         ])
 #     ])
-#
-#     # {w$uw : w,u ∈ {a,b}∗}
-#     sapda3 = SAPDA(
-#         states={'q0', 'qw', 'qe', 'qa1', 'qa2', 'qb1', 'qb2'},
-#         input_alphabet={'a', 'b', '$'},
-#         stack_alphabet={'Z', '#'},
-#         transitions={
-#             'q0': {'Z': {'a': {(('qa1', 'Z'), ('q0', 'Z'))}, 'b': {(('qb1', 'Z'), ('q0', 'Z'))}, '$': {(('qw', 'Z'),)}}
-#                    },
-#             'qa1': {'Z': {'a': {(('qa1', '#Z'),)}, 'b': {(('qa1', '#Z'),)}, '$': {(('qa2', 'Z'),)}},
-#                     '#': {'a': {(('qa1', '##'),)}, 'b': {(('qa1', '##'),)}, '$': {(('qa2', '#'),)}}
-#                     },
-#             'qb1': {'Z': {'a': {(('qb1', '#Z'),)}, 'b': {(('qb1', '#Z'),)}, '$': {(('qb2', 'Z'),)}},
-#                     '#': {'a': {(('qb1', '##'),)}, 'b': {(('qb1', '##'),)}, '$': {(('qb2', '#'),)}}
-#                     },
-#             'qa2': {'Z': {'a': {(('qa2', 'Z'),), (('qe', 'Z'),)}, 'b': {(('qa2', 'Z'),)}},
-#                     '#': {'a': {(('qa2', '#'),), (('qe', '#'),)}, 'b': {(('qa2', '#'),)}}
-#                     },
-#             'qb2': {'Z': {'a': {(('qb2', 'Z'),)}, 'b': {(('qb2', 'Z'),), (('qe', 'Z'),)}},
-#                     '#': {'a': {(('qb2', '#'),)}, 'b': {(('qb2', '#'),), (('qe', '#'),)}}
-#                     },
-#
-#             'qw': {'Z': {'a': {(('qw', 'Z'),), (('qe', 'e'),)}, 'b': {(('qw', 'Z'),), (('qe', 'e'),)}}
-#                    },
-#             'qe': {'Z': {'e': {(('qe', 'e'),)}},
-#                    '#': {'a': {(('qe', 'e'),)}, 'b': {(('qe', 'e'),)}}}
-#         },
-#         initial_state='q0',
-#         initial_stack_symbol='Z'
-#     )
+
+
 #
 #     leaf1 = Leaf(sapda3, ['e'], 'qe', 'e')
 #     root = ['e']
@@ -389,3 +361,17 @@ def root(t):
 # # MAIN ---
 # if __name__ == '__main__':
 #     main()
+
+
+# leaf1 = Node(('q', 'e', 'e'))([])
+# leaf2 = Node(('q', 'e', 'e'))([])
+#
+# tree1 = Node(('e'))([leaf1, leaf2])
+# leaf3 = Node(('q', 'e', 'e'))([])
+#
+# tree2 = Node(('e'))([tree1, leaf3])
+#
+#
+# print_tree = drawTree2(False)(False)(tree2)
+#
+# print(print_tree)
