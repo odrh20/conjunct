@@ -9,7 +9,10 @@ This document gives the instructions to install and run the Conjunct program.
 
     The program may not run on older versions of Python. As of September 3 2021, the latest version is 3.9.7, which works with Conjunct.
 
-2. [Install Numpy] (https://numpy.org/install/).
+
+
+
+2. [Install Numpy](https://numpy.org/install/).
 
    You can download Numpy from the terminal with `pip`:
 
@@ -17,7 +20,7 @@ This document gives the instructions to install and run the Conjunct program.
     pip install numpy
     ```
 
-3. [Install Tabulate] (https://pypi.org/project/tabulate/).
+3. [Install Tabulate](https://pypi.org/project/tabulate/).
 
    You can download Tabulate from the terminal with `pip`:
 
@@ -25,7 +28,7 @@ This document gives the instructions to install and run the Conjunct program.
     pip install tabulate
     ```
 
-4. [Install func-timeout] (https://pypi.org/project/func-timeout/).
+4. [Install func-timeout](https://pypi.org/project/func-timeout/).
 
    You can download func-timeout from the terminal with `pip`:
 
@@ -33,7 +36,7 @@ This document gives the instructions to install and run the Conjunct program.
     pip install func-timeout
     ```
 
-5. [Install Kivy] (https://kivy.org/doc/stable/gettingstarted/installation.html).
+5. [Install Kivy](https://kivy.org/doc/stable/gettingstarted/installation.html).
 
    It should be possible to install with the following `pip` command:
 
