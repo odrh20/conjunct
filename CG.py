@@ -1,9 +1,10 @@
-# Class for conjunctive grammar
-#from prompt_toolkit import print_formatted_text, HTML
 from SAPDA import *
 from Computation import *
 from itertools import chain, combinations
 
+"""
+Class for Conjunctive Grammar objects
+"""
 
 class CG:
     def __init__(self, terminals, variables, start_variable, rules,
@@ -18,6 +19,7 @@ class CG:
         self.start_variable = str(start_variable)
         self.user_defined = user_defined
 
+        # chars is used to generate fresh variables when converting to BNF
         if chars is None:
             upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
             lower = 'abcdefghijklmnopqrstuvwxyz'
@@ -29,11 +31,9 @@ class CG:
                     self.chars.append(chr(i))
 
 
-
     def __eq__(self, other):
         return (self.terminals == other.terminals) and (self.variables == other.variables) and \
                (self.start_variable == other.start_variable) and (self.rules == other.rules) #and \
-               #(self.name == other.name)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -457,8 +457,6 @@ class CG:
 
     def convert_to_BNF(self):
 
-        #print(self)
-        #print("\nCONVERTING TO BINARY NORMAL FORM...\n")
         self_ = copy.deepcopy(self)
 
         e_in_language = False
@@ -478,10 +476,7 @@ class CG:
             self_.rules[new_start_var] = {('e',)}
             for exp in self_.rules[old_start_var]:
                 self_.rules[new_start_var].add(exp)
-        #print(self_)
         return self_
-
-#  name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n ≥ 0}",
 
 
 cg1 = CG(
@@ -551,17 +546,5 @@ cg5 = CG(
     start_variable='S',
     rules={
         'S': {('aSa',), ('aSb',), ('e', )},
-    },
-)
-
-# Just for testing
-cg6 = CG(
-    terminals={'a', 'b'},
-    variables={'S', 'A', 'B'},
-    start_variable='S',
-    rules={
-        'S': {('AB',), ('e',)},
-        'A': {('a',)},
-        'B': {('b',)}
     },
 )

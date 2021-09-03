@@ -1,5 +1,4 @@
 import copy
-
 from SAPDA import SAPDA
 from Configuration import *
 import queue
@@ -7,6 +6,9 @@ from queue import PriorityQueue, Queue
 from func_timeout import func_timeout, FunctionTimedOut, func_set_timeout
 import random
 
+"""
+Class for SAPDA computations
+"""
 
 class Computation:
 
@@ -31,11 +33,6 @@ class Computation:
 
         self.update_transition_dict()
 
-    def print_computation(self):
-        for i in range(len(self.computation)):
-            print("Step", i+1, "\n")
-            print((self.computation[i]).print_tree(), "\n", "\n")
-        return ""
 
     def get_computation_list(self):
         comp_list = []
@@ -57,7 +54,6 @@ class Computation:
             self.is_leaf = True
         else:
             self.is_leaf = False
-        #print("\nNEW CONFIG: ", new_config.get_denotation(), "\n")
 
     def synchronise_loop(self):
         """
@@ -80,12 +76,10 @@ class Computation:
         If there are any leaves that have no available transitions but have not emptied their stack, reject.
         If there are any leaves that have emptied their stack but still have remaining input, reject.
         """
-        #print(f"Calling is_rejecting_config on {self.configuration.get_denotation()}")
         if self.is_accepting_config():
             return False
 
         if len(self.configuration.get_active_branches()) == 0:
-            #print("\n0 active branches, reject\n")
             return True
 
         if self.configuration.get_tree_depth() > len(self.input_string):
@@ -93,15 +87,12 @@ class Computation:
 
         for leaf in self.transition_dict:
             if len(self.transition_dict[leaf]) == 0:
-                #print("\nempty dictionary value, reject\n")
                 return True
 
         for leaf in self.configuration.get_all_leaves():
             if not (leaf.has_valid_transition() or leaf.has_empty_stack()):
-                #print(f"found leaf {leaf.get_denotation()} which has no valid transition and doesn't have an empty stack. rejecting")
                 return True
 
-        #print("Not rejecting the config")
         return False
 
     def update_transition_dict(self):
@@ -155,36 +146,6 @@ class Computation:
                 return True
         return False
 
-    def count_available_transitions(self):
-        transitions = 0
-        for leaf in self.configuration.get_active_branches():
-            transitions += len(self.transition_dict[leaf.get_dict_key()])
-        return transitions
-
-    def get_len_remaining_input(self):
-        remaining = 0
-        for leaf in self.configuration.get_all_leaves():
-            if leaf.remaining_input != 'e':
-                remaining += len(leaf.remaining_input)
-        return remaining
-
-    def is_loop_transition(self, leaf, letter, conjuncts):
-        if letter == 'e':
-            for next_state, push_string in conjuncts:
-                if next_state == leaf.state and push_string[0] == leaf.stack[0] or self.configuration.stack[0] == 'e':
-                    return True
-        return False
-
-    def get_priority(self):
-        # Prioritise configurations with a larger percentage of leaves in an accepting configuration.
-        stacks_length = 1
-        for leaf in self.configuration.get_all_leaves():
-            if not leaf.has_empty_stack():
-                stacks_length += len(leaf.stack)
-        priority = self.get_len_remaining_input() + len(self.configuration.get_active_branches()) + stacks_length
-        return 1
-        #return self.get_len_remaining_input() * len(self.configuration.get_active_branches())
-
     def check_accept_reject(self):
 
         self.synchronise_loop()
@@ -224,7 +185,6 @@ class Computation:
         Returns tuple of (Accept, Reject) booleans. If we reach a non-deterministic transition, both are False.
         """
         self.synchronise_loop()
-
         while self.is_deterministic_transition():
 
             # Check for synchronised leaves. If synchronisation occurs, call this function again.
@@ -238,7 +198,6 @@ class Computation:
             if self.is_rejecting_config():
                 return False, True
 
-
             for leaf in self.configuration.get_active_branches():
                 if leaf.get_dict_key() in self.transition_dict and len(self.transition_dict[leaf.get_dict_key()]) == 1:
                     letter, conjuncts = self.transition_dict[leaf.get_dict_key()][0]
@@ -246,17 +205,11 @@ class Computation:
                     self.update(new_config)
                     self.synchronise_loop()
 
-
         # There is no deterministic transition available
-
         if self.is_accepting_config():
             return True, False
         if self.is_rejecting_config():
-            #print("Rejecting config: ", self.configuration.get_denotation())
             return False, True
-
-        #print("Stuck config: ", self.configuration.get_denotation())
-        #print("Config dict: ", self.transition_dict)
         return False, False
 
     def run_machine(self):
@@ -275,17 +228,11 @@ class Computation:
         if reject:
             return []
 
-        # Else we reached a non-deterministic transition
-        #print("\nLooking for solution...\n")
-        #print("Current config: ", self.configuration.get_denotation())
         try:
             return self.dfs()
         except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
             return ['timeout']
-            # try:
-            #     return Computation(self.sapda, self.input_string).bfs()
-            # except (RecursionError, FunctionTimedOut, RuntimeError, ValueError):
-            #      return ['timeout']
+
 
 
     @func_set_timeout(20)
@@ -306,8 +253,6 @@ class Computation:
                 accept, reject = self_.run_deterministic_transitions()
 
                 if accept:
-                    #print("Word accepted!\n")
-                    #self_.print_computation()
                     return self_.get_computation_list()
 
                 if reject:
@@ -322,7 +267,6 @@ class Computation:
                 if not (accept or reject):
                     path.append((leaf, letter, conjuncts, self.configuration, self.computation, self.transition_dict, self.is_leaf))
                     return self_.dfs(depth + 1, path)
-        print("Ran out of leaves to try")
 
     def backtrack(self, path, depth):
         if not path:
@@ -336,70 +280,29 @@ class Computation:
 
     @func_set_timeout(20)
     def bfs(self):
-        #print("CALLING BFS")
 
         # Create a Queue to keep track of all computation paths. Add current configuration to it.
         paths = Queue()
         paths.put(self)
 
         while not paths.empty():
-            #print("\nPRINTING QUEUE")
-            #for priority, _, item in list(paths.queue):
-                #print(priority, item.configuration.get_denotation())
-            #print("QUEUE PRINTED\n")
+
             current_self = paths.get()
             for leaf in current_self.order_active_branches():
-                #print("Current leaf: ", leaf.get_denotation())
-                #print("Available transitions: ", current_self.transition_dict[leaf.get_dict_key()])
+
                 for letter, conjuncts in current_self.order_transitions(leaf):
-                    #print("Letter, conjuncts: ", letter, conjuncts)
                     new_self = copy.deepcopy(current_self)
                     new_config = new_self.configuration.find_leaf_for_transition(leaf, letter, conjuncts)
                     new_self.update(new_config)
-                    #accept, reject = new_self.check_accept_reject()
-                    #new_self.transition_dict[leaf.get_dict_key()] = [(letter, conjuncts)]
                     accept, reject = new_self.run_deterministic_transitions()
                     if accept:
-                        #print("Word accepted!\n")
                         return new_self.get_computation_list()
-
                     if reject:
                         continue
-                    #if new_self in paths.queue:
-                        #print("ALREADY IN QUEUE")
                     else:
-                        #print("STUCK. NEW SELF: ", new_self.configuration.get_denotation())
                         paths.put(new_self)
 
         return []
-
-
-# words with equal number of a's, b's and c's
-sapda2 = SAPDA(
-    name="Equal number of a's, b's and c's: {w ∈ Σ[sup]*[/sup] | |w|[sub]a[/sub] = |w|[sub]b[/sub] = |w|[sub]c[/sub]}",
-    states={'q0', 'q1', 'q2'},
-    input_alphabet={'a', 'b', 'c'},
-    stack_alphabet={'Z', 'a', 'b', 'c'},
-    transitions={
-        'q0': {'Z': {'e': {(('q1', 'Z'), ('q2', 'Z'))}}
-               },
-        'q1': {'Z': {'a': {(('q1', 'aZ'),)}, 'b': {(('q1', 'bZ'),)}, 'c': {(('q1', 'Z'),)}, 'e': {(('q0', 'e'),)}},
-               'a': {'a': {(('q1', 'aa'),)}, 'b': {(('q1', 'e'),)}, 'c': {(('q1', 'a'),)}},
-               'b': {'a': {(('q1', 'e'),)}, 'b': {(('q1', 'bb'),)}, 'c': {(('q1', 'b'),)}},
-               },
-        'q2': {'Z': {'a': {(('q2', 'Z'),)}, 'b': {(('q2', 'bZ'),)}, 'c': {(('q2', 'cZ'),)}, 'e': {(('q0', 'e'),)}},
-               'b': {'a': {(('q2', 'b'),)}, 'b': {(('q2', 'bb'),)}, 'c': {(('q2', 'e'),)}},
-               'c': {'a': {(('q2', 'c'),)}, 'b': {(('q2', 'e'),)}, 'c': {(('q2', 'cc'),)}},
-               },
-    },
-    initial_state='q0',
-    initial_stack_symbol='Z'
-)
-
-#  name="Blocks of a's, b's and c's of equal length: {a[sup]n[/sup] b[sup]n[/sup] c[sup]n[/sup] | n > 0}",
-
-# a^n b^n c^n (n > 0) : this is a deterministic SAPDA
-
 
 
 sapda1 = SAPDA(
@@ -428,6 +331,31 @@ sapda1 = SAPDA(
     initial_state='q0',
     initial_stack_symbol='Z'
 )
+
+
+# words with equal number of a's, b's and c's
+sapda2 = SAPDA(
+    name="Equal number of a's, b's and c's: {w ∈ Σ[sup]*[/sup] | |w|[sub]a[/sub] = |w|[sub]b[/sub] = |w|[sub]c[/sub]}",
+    states={'q0', 'q1', 'q2'},
+    input_alphabet={'a', 'b', 'c'},
+    stack_alphabet={'Z', 'a', 'b', 'c'},
+    transitions={
+        'q0': {'Z': {'e': {(('q1', 'Z'), ('q2', 'Z'))}}
+               },
+        'q1': {'Z': {'a': {(('q1', 'aZ'),)}, 'b': {(('q1', 'bZ'),)}, 'c': {(('q1', 'Z'),)}, 'e': {(('q0', 'e'),)}},
+               'a': {'a': {(('q1', 'aa'),)}, 'b': {(('q1', 'e'),)}, 'c': {(('q1', 'a'),)}},
+               'b': {'a': {(('q1', 'e'),)}, 'b': {(('q1', 'bb'),)}, 'c': {(('q1', 'b'),)}},
+               },
+        'q2': {'Z': {'a': {(('q2', 'Z'),)}, 'b': {(('q2', 'bZ'),)}, 'c': {(('q2', 'cZ'),)}, 'e': {(('q0', 'e'),)}},
+               'b': {'a': {(('q2', 'b'),)}, 'b': {(('q2', 'bb'),)}, 'c': {(('q2', 'e'),)}},
+               'c': {'a': {(('q2', 'c'),)}, 'b': {(('q2', 'e'),)}, 'c': {(('q2', 'cc'),)}},
+               },
+    },
+    initial_state='q0',
+    initial_stack_symbol='Z'
+)
+
+
 
 # {w$uw : w,u ∈ {a,b}∗}
 sapda3_ = SAPDA(
@@ -543,82 +471,3 @@ pda = SAPDA(
     initial_state='q0',
     initial_stack_symbol='Z'
 )
-
-pda2 = SAPDA(
-    states={'q0', 'q1', 'q2'},
-    input_alphabet={'a', 'b', 'c'},
-    stack_alphabet={'Z', 'a', 'b', 'c', 'S', 'P'},
-    transitions={
-        'q0': {'Z': {'e': {(('q1', 'SZ'),)}}
-               },
-        'q1': {'a': {'a': {(('q1', 'e'),)}},
-               'b': {'b': {(('q1', 'e'),)}},
-               'c': {'c': {(('q1', 'e'),)}},
-               'S': {'e': {(('q1', 'aPc'),), (('q1', 'ab'),)}},
-               'P': {'e': {(('q1', 'SP'),), (('q1', 'e'),)}},
-               'Z': {'e': {(('q2', 'e'),)}}
-               }
-    },
-    initial_state='q0',
-    initial_stack_symbol='Z'
-)
-
-sapda6 = SAPDA(
-    states={'q'},
-    input_alphabet={'a', 'b', 'c'},
-    stack_alphabet={'S', 'A', 'B', 'C', 'D', 'a', 'b', 'c'},
-    transitions={
-        'q': {'a': {'a': {(('q', 'e'),)}},
-              'b': {'b': {(('q', 'e'),)}},
-              'c': {'c': {(('q', 'e'),)}},
-              'S': {'e': {(('q', 'A'), ('q', 'C'))}},
-              'A': {'e': {(('q', 'aA'),), (('q', 'B'),)}},
-              'B': {'e': {(('q', 'bBc'),), (('q', 'e'),)}},
-              'C': {'e': {(('q', 'Cc'),), (('q', 'D'),)}},
-              'D': {'e': {(('q', 'aDb'),), (('q', 'e'),)}},
-              }
-    },
-    initial_state='q',
-    initial_stack_symbol='S'
-)
-
-sapda7 = SAPDA(
-    states={'q'},
-    input_alphabet={'a'},
-    stack_alphabet={'S', 'a'},
-    transitions={
-        'q': {
-              'S': {'e': {(('q', 'aaS'), ('q', 'aSa')), (('q', 'a'),)}},
-              'a': {'a': {(('q', 'e'),)}}
-              }
-    },
-    initial_state='q',
-    initial_stack_symbol='S'
-)
-
-
-#print(sapda2)
-#sapda = Computation(sapda3, 'abbab$abbab')
-#sapda = Computation(sapda2, 'cba')
-# # #
-#sapda.run_machine()
-# #
-#print(sapda.computation)
-
-
-# leaf1 = Leaf(sapda1, ['Z'], 'q0', 'abc')
-#
-# leaf2 = Leaf(sapda1, ['Z'], 'qbc+', 'abc')
-# leaf3 = Leaf(sapda1, ['Z'], 'qac+', 'abc')
-# tree1 = Tree(sapda1, ['e'], [leaf2, leaf3])
-
-
-# leaf1 = Leaf(sapda1, ['e'], 'q0', 'abc')
-#print(tree1.print_tree())
-# leaf2 = Leaf(sapda1, ['Z'], 'q0', 'abc')
-# leaf3 = Leaf(sapda1, ['Z'], 'q1', 'abc')
-# subtree1 = Tree(sapda1, ['a', 'Z'], [leaf1, leaf1])
-# subtree2 = Tree(sapda1, ['a'], [leaf3, subtree1])
-# subtree3 = Tree(sapda1, ['e'], [leaf2, subtree2])
-# tree1 = Tree(sapda1, ['b', 'Z'], [leaf2, subtree3])
-# print(tree1.print_tree())

@@ -514,8 +514,6 @@ WindowManager:
                 root.manager.transition.direction = "left"
 
 
-
-
 <MakeCGWindow>:
     name: "make_cg"
     id: make_cg
@@ -583,7 +581,6 @@ WindowManager:
                     font_name: "DejaVuSans.ttf"
                     text: ''
                     size_hint: 0.5, 0.5
-                    #height: max(self.minimum_height, scroll_view.height)
 
 
         RoundedButton:
@@ -955,7 +952,6 @@ WindowManager:
 
             RoundedLabel:
                 id: cg_def_label
-                #font_size:
                 text: str(app.my_cg)
                 pos_hint: {'x':0.1 , 'top':.85}
                 size_hint_y: None
@@ -984,8 +980,6 @@ WindowManager:
                 padding:10
                 size_hint: None, None
                 pos_hint: {'top' : 0.95}
-                #default_size: None, dp(20)
-                #default_size_hint: 1, None
                 height: self.minimum_height
                 width: self.minimum_width
         Slider:
@@ -1069,7 +1063,6 @@ WindowManager:
         do_scroll_x: False
         do_scroll_y: True
 
-
         GridLayout:
 
             size: root.width, root.height
@@ -1086,7 +1079,6 @@ WindowManager:
                 size_hint_y: None
                 text_size: self.width, None
                 height: self.texture_size[1]
-
 
 
 <ConvertCGToSAPDAWindow>:
@@ -1134,7 +1126,6 @@ WindowManager:
                 id: rl
                 size_hint_y: None
                 pos_hint: {'x':0.1 , 'top':.80}
-                #text_size: self.width, None
                 height: self.texture_size[1]
                 text: str(app.my_sapda)
 
@@ -1191,8 +1182,6 @@ WindowManager:
                 elif len(app.my_computation) > 0: Factory.SAPDASuccessPopup().open()
                 else: Factory.SAPDAFailPopup().open()
 
-                #input_str.text = ""
-
 
     ScrollView:
         size_hint_y: .60
@@ -1226,9 +1215,6 @@ WindowManager:
     auto_dismiss: True
     size_hint: 0.9, 0.9
     title: "Word accepted!"
-    #on_dismiss:
-#        app.my_computation = ListProperty(None)
-
 
     BoxLayout:
 
@@ -1242,8 +1228,6 @@ WindowManager:
                 padding:10
                 size_hint: None, None
                 pos_hint: {'top' : 0.95}
-                #default_size: None, dp(20)
-                #default_size_hint: 1, None
                 height: self.minimum_height
                 width: self.minimum_width
         Slider:

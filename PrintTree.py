@@ -6,8 +6,6 @@ Textually visualized tree, with vertically-centered parent nodes
 from functools import reduce
 from itertools import (chain, takewhile)
 
-from SAPDA import SAPDA
-from Configuration import *
 
 '''
                ┌ Epsilon

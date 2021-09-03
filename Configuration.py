@@ -266,7 +266,6 @@ class Tree(Configuration):
         for child in self.children:
             child_has_transition.append(child.has_valid_transition())
 
-        #print("CHILD HAS TRANSITION: ", child_has_transition)
         return any(child_has_transition)
 
     def get_tree_depth(self):

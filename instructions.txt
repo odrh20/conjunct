@@ -359,8 +359,8 @@ Initial Stack Symbol:
    S
 
 Transitions:
-   1.  δ(q, e, S) = (q, a), (q, aaS) ∧ (q, aSa)
-   2.  δ(q, a, a) = (q, e)
+   1.  δ(q, e, S) = {(q, a), (q, aaS) ∧ (q, aSa)}
+   2.  δ(q, a, a) = {(q, e)}
 
 
 The transitions are grouped according to the left-hand side of the transition function - δ(current state, letter to read, stack symbol to pop).
@@ -390,29 +390,37 @@ We have a choice of two transitions: this is a non-deterministic SAPDA. We choos
 Now there are two separate leaves to process. The order in which they are processed doesn't matter. Let's process the top one first, and then the bottom one.
 
 
+Read 'a', pop 'a', push empty word:
+
 [font=FreeMono]
-   ┌ ('q', 'aa', 'aS')    <-- Read 'a', pop 'a', push empty word
+   ┌ ('q', 'aa', 'aS')   
  e ┤
    └ ('q', 'aaa', 'aSa')
 [/font]
 
 
+Read 'a', pop 'a', push empty word:
+
 [font=FreeMono]
-   ┌ ('q', 'a', 'S')    <-- Read 'a', pop 'a', push empty word
+   ┌ ('q', 'a', 'S')  
  e ┤
    └ ('q', 'aaa', 'aSa')
 [/font]
 
 
+Read empty word, pop 'S', push 'a':
+
 [font=FreeMono]
-   ┌ ('q', 'a', 'a')    <-- Read empty word, pop 'S', push 'a'
+   ┌ ('q', 'a', 'a')   
  e ┤
    └ ('q', 'aaa', 'aSa')
 [/font]
 
 
+Read 'a', pop 'a', push empty word:
+
 [font=FreeMono]
-   ┌ ('q', 'e', 'e')    <-- Read 'a', pop 'a', push empty word
+   ┌ ('q', 'e', 'e')  
  e ┤
    └ ('q', 'aaa', 'aSa')
 [/font]
@@ -421,31 +429,38 @@ Now there are two separate leaves to process. The order in which they are proces
 OK, now the top leaf has an empty stack, so we cannot do anything else to it. Let's look at the bottom leaf.
 
 
+Read 'a', pop 'a', push empty word:
 [font=FreeMono]
    ┌ ('q', 'e', 'e')
  e ┤
-   └ ('q', 'aa', 'Sa')    <-- Read 'a', pop 'a', push empty word
+   └ ('q', 'aa', 'Sa')
 [/font]
 
 
+Read empty word, pop 'S', push 'a':
+
 [font=FreeMono]
    ┌ ('q', 'e', 'e')
  e ┤
-   └ ('q', 'aa', 'aa')    <-- Read empty word, pop 'S', push 'a'
+   └ ('q', 'aa', 'aa') 
 [/font]
 
 
+Read 'a', pop 'a', push empty word:
+
 [font=FreeMono]
    ┌ ('q', 'e', 'e')
  e ┤
-   └ ('q', 'a', 'a')    <-- Read 'a', pop 'a', push empty word
+   └ ('q', 'a', 'a')  
 [/font]
 
 
+Read 'a', pop 'a', push empty word:
+
 [font=FreeMono]
    ┌ ('q', 'e', 'e')
  e ┤
-   └ ('q', 'e', 'e')    <-- Read 'a', pop 'a', push empty word
+   └ ('q', 'e', 'e')
 [/font]
 
 
@@ -483,32 +498,32 @@ Initial Stack Symbol:
    Z
 
 Transitions:
-   1.  δ(q0, e, Z) = (q1, Z) ∧ (q2, Z)
+   1.  δ(q0, e, Z) = {(q1, Z) ∧ (q2, Z)}
 
-   2.  δ(q1, a, Z) = (q1, aZ)
-   3.  δ(q1, b, Z) = (q1, bZ)
-   4.  δ(q1, c, Z) = (q1, Z)
-   5.  δ(q1, e, Z) = (q0, e)
-   6.  δ(q1, a, a) = (q1, aa)
-   7.  δ(q1, b, a) = (q1, e)
-   8.  δ(q1, c, a) = (q1, a)
-   9.  δ(q1, a, b) = (q1, e)
-   10.  δ(q1, b, b) = (q1, bb)
-   11.  δ(q1, c, b) = (q1, b)
+   2.  δ(q1, a, Z) = {(q1, aZ)}
+   3.  δ(q1, b, Z) = {(q1, bZ)}
+   4.  δ(q1, c, Z) = {(q1, Z)}
+   5.  δ(q1, e, Z) = {(q0, e)}
+   6.  δ(q1, a, a) = {(q1, aa)}
+   7.  δ(q1, b, a) = {(q1, e)}
+   8.  δ(q1, c, a) = {(q1, a)}
+   9.  δ(q1, a, b) = {(q1, e)}
+   10.  δ(q1, b, b) = {(q1, bb)}
+   11.  δ(q1, c, b) = {(q1, b)}
 
-   12.  δ(q2, a, Z) = (q2, Z)
-   13.  δ(q2, b, Z) = (q2, bZ)
-   14.  δ(q2, c, Z) = (q2, cZ)
-   15.  δ(q2, e, Z) = (q0, e)
-   16.  δ(q2, a, b) = (q2, b)
-   17.  δ(q2, b, b) = (q2, bb)
-   18.  δ(q2, c, b) = (q2, e)
-   19.  δ(q2, a, c) = (q2, c)
-   20.  δ(q2, b, c) = (q2, e)
-   21.  δ(q2, c, c) = (q2, cc)
+   12.  δ(q2, a, Z) = {(q2, Z)}
+   13.  δ(q2, b, Z) = {(q2, bZ)}
+   14.  δ(q2, c, Z) = {(q2, cZ)}
+   15.  δ(q2, e, Z) = {(q0, e)}
+   16.  δ(q2, a, b) = {(q2, b)}
+   17.  δ(q2, b, b) = {(q2, bb)}
+   18.  δ(q2, c, b) = {(q2, e)}
+   19.  δ(q2, a, c) = {(q2, c)}
+   20.  δ(q2, b, c) = {(q2, e)}
+   21.  δ(q2, c, c) = {(q2, cc)}
 
 
-There are a lot of different transitions, so it might look complicated. However, this is a deterministic SAPDA, so the computation is quite easy, because there is never more than one available transition for any leaf.
+There are a lot of different transitions! Let's take a closer look.
 
 
 The only conjunctive transition is the one from the initial configuration. This opens up two branches - one in state 'q1', and one in state 'q2'. The 'q1' branch is responsible for ensuring that |w|[sub]a[/sub] = |w|[sub]b[/sub], and the 'q2' branch is responsible for ensuring that |w|[sub]b[/sub] = |w|[sub]c[/sub]. The SAPDA will accept only the intersection of these two languages, in which |w|[sub]a[/sub] = |w|[sub]b[/sub] = |w|[sub]c[/sub].
@@ -535,27 +550,38 @@ We start out in the initial configuration: state 'q0', remaining input 'abc', cu
 We process the top branch until it empties its stack.
 
 
+Read 'a', pop 'Z', push 'aZ':
 
 [font=FreeMono]
-   ┌ ('q1', 'bc', 'aZ')    <-- Read 'a', pop 'Z', push 'aZ'
+   ┌ ('q1', 'bc', 'aZ')    
  e ┤
    └ ('q2', 'abc', 'Z')
+[/font]
 
 
 
-   ┌ ('q1', 'c', 'Z')    <-- Read 'b', pop 'a', push empty word
+Read 'b', pop 'a', push empty word:
+
+[font=FreeMono]
+   ┌ ('q1', 'c', 'Z') 
  e ┤
    └ ('q2', 'abc', 'Z')
+[/font]
 
 
+Read 'c', pop 'Z', push 'Z':
 
-   ┌ ('q1', 'e', 'Z')    <-- Read 'c', pop 'Z', push 'Z'
+[font=FreeMono]
+   ┌ ('q1', 'e', 'Z')    
  e ┤
    └ ('q2', 'abc', 'Z')
+[/font]
 
 
+Read empty word, pop 'Z', push empty word, go to state 'q0':
 
-   ┌ ('q0', 'e', 'e')    <-- Read empty word, pop 'Z', push empty word, go to state 'q0'
+[font=FreeMono]
+   ┌ ('q0', 'e', 'e')
  e ┤
    └ ('q2', 'abc', 'Z')
 [/font]
@@ -565,29 +591,38 @@ We process the top branch until it empties its stack.
 Now we process the bottom branch.
 
 
+Read 'a', pop 'Z', push 'Z':
 
 [font=FreeMono]
    ┌ ('q0', 'e', 'e')
  e ┤
-   └ ('q2', 'bc', 'Z')   <-- Read 'a', pop 'Z', push 'Z'
+   └ ('q2', 'bc', 'Z')
+[/font]
 
 
+Read 'b', pop 'Z', push 'bZ':
 
+[font=FreeMono]
    ┌ ('q0', 'e', 'e')
  e ┤
-   └ ('q2', 'c', 'bZ')   <-- Read 'b', pop 'Z', push 'bZ'
+   └ ('q2', 'c', 'bZ')
+[/font]
 
 
+Read 'c', pop 'b', push empty word:
 
+[font=FreeMono]
    ┌ ('q0', 'e', 'e')
  e ┤
-   └ ('q2', 'e', 'Z')    <-- Read 'c', pop 'b', push empty word
+   └ ('q2', 'e', 'Z')
+[/font]
 
 
-
+Read empty word, pop 'Z', push empty word, go to state 'q0':
+[font=FreeMono]
    ┌ ('q0', 'e', 'e')
  e ┤
-   └ ('q0', 'e', 'e')    <-- Read empty word, pop 'Z', push empty word, go to state 'q0'
+   └ ('q0', 'e', 'e')
 [/font]
 
 

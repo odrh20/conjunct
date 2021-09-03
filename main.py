@@ -15,16 +15,12 @@ from kivy.metrics import sp
 from kivy.graphics import *
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-
-
 from CG import *
 from SAPDA import *
 from Parser import *
-
 import re
 
 file = open("instructions.txt")
-
 
 
 # Define the different screens
@@ -168,15 +164,11 @@ class SAPDATextInput(TextInput):
         transitions=trans_dict, initial_state=initial_state, initial_stack_symbol=initial_stack_symbol, user_defined=True)
 
 
-
     def is_valid_sapda_input(self, text):
 
         transitions = self.get_transitions(text)
-        #print("all transitions: ", transitions)
         pattern = re.compile("δ\(.+,.+,.\)=(\(.+,.+\)∧)*\(.+,.+\)")
-
         return all(pattern.fullmatch(transition) for transition in transitions)
-
 
 
 
@@ -197,14 +189,12 @@ class CGTextInput(TextInput):
         if self.need_arrow():
             super(CGTextInput, self).insert_text(" ⟶ ", from_undo=from_undo)
 
-
     def is_valid_cg_input(self, text):
         """
         Checks whether the rules inside the text box are in the right format.
         Each line should consist of a single character, an arrow, and a string,
         ignoring spaces and brackets. eg. S ⟶ ab
         """
-        #print("CALLING IS_VALID_INPUT (CG)")
         rules = self.get_rules(text)
         return len(rules) > 0 and all(len(rule) > 2 and rule[1] == '⟶' for rule in rules)
 
@@ -260,8 +250,6 @@ class CGTextInput(TextInput):
 
 
 
-
-
 class ConjunctApp(App):
 
     my_cg = ObjectProperty(None)
@@ -297,12 +285,8 @@ class ConjunctApp(App):
     sapda_tutorial_txt_6 = StringProperty(instructions[12])
 
 
-
-
     def build(self):
-
         kv = Builder.load_file('gui.kv')
-
         return kv
 
 

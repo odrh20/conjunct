@@ -72,14 +72,10 @@ class Parser:
         if self.word == 'e':
             return ('e',) in self.grammar.rules[self.grammar.start_variable]
 
-        #self.populate_table()
-        #print(self)
-
         return any(node.variable == self.grammar.start_variable for node in self.table[0, self.n-1])
 
     def populate_table(self):
-        #print("Populating the CYK recognition matrix.\n"
-              #"Look at the top-right cell. If the start variable is there, then the string is recognised.\n")
+
         self.compute_diagonal()
 
         for k in range(self.n):
@@ -91,8 +87,6 @@ class Parser:
                     node_set = node_set.union(new_nodes)
                     self.table[i, j] = self.get_node_set(node_set, i, j)
 
-
-
     def compute_diagonal(self):
         for i in range(self.n):
             self.table[i, i] = set()
@@ -101,11 +95,8 @@ class Parser:
                     new_node = MatrixNode(i, i, variable)
                     new_node.update_pointers(self.word[i], None, None)
                     self.table[i, i].add(new_node)
-        #print(self.table)
 
     def get_matrix(self):
-
-        #self.populate_table()
 
         data = copy.deepcopy(self.table)
 
@@ -119,11 +110,7 @@ class Parser:
         data = np.where(data is None, '', data)
         data = np.where(data == set(), '{}', data)
 
-        #if self.grammar.start_variable in data[0, self.n - 1]:
         data[0, self.n - 1] = str(data[0, self.n - 1])
-
-        #else:
-        #    data[0, self.n - 1] = '\033[91m' + str(data[0, self.n - 1]) + '\033[0m'
 
         return tabulate(data, headers=[letter for letter in self.word], tablefmt='psql')
 
@@ -131,7 +118,6 @@ class Parser:
         """
         Uses tabulate to generate a recognition matrix for printing.
         """
-        #self.populate_table()
 
         data = copy.deepcopy(self.table)
 
@@ -196,10 +182,6 @@ class Parser:
 
 
 
-
-
-
-
 """
 Cells in a recognition matrix contain sets of MatrixNode objects.
 Each MatrixNode corresponds to a specific position in the matrix and a single rule to follow, which may contain more than one
@@ -208,7 +190,6 @@ The pointer dictionary shows where the rule points to for each conjunct, in left
 variables in a two-variable rule.
 If the MatrixNode is on the diagonal, then the rule goes to a single terminal and the pointers are None values.
 """
-
 
 class MatrixNode:
     def __init__(self, i, j, variable, pointers=None):

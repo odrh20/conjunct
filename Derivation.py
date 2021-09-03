@@ -2,12 +2,9 @@ import copy
 import random
 from CG import *
 from Word import *
-#from Parser import *
 from tabulate import tabulate
-
 import sys
 sys.setrecursionlimit(10**6)
-
 
 
 """
@@ -45,7 +42,7 @@ class Derivation:
         print_string += f"[u]Derivation for {self.target_word}:[/u]\n\n"
         for i, word in enumerate(self.get_derivation_list()):
             if i != 0:
-                print_string += "\n" #[color=ffff00]=>[/color]\n"
+                print_string += "\n"
             print_string += word
         return print_string
 
