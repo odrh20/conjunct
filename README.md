@@ -1,3 +1,5 @@
+[GitHub repository](https://github.com/odrh20/conjunct)
+
 ## Installing and Running Conjunct
 
 This document gives the instructions to install and run the Conjunct program.
