@@ -1,5 +1,5 @@
 # Class for conjunctive grammar
-from prompt_toolkit import print_formatted_text, HTML
+#from prompt_toolkit import print_formatted_text, HTML
 from SAPDA import *
 from Computation import *
 from itertools import chain, combinations
@@ -259,8 +259,8 @@ class CG:
                             nullable.add(variable)
                             continue_loop = True
                             break
-                            
-        print(f"nullable set: {nullable}")
+
+        #print(f"nullable set: {nullable}")
         return nullable
 
     def get_null_expansions(self, expansion):

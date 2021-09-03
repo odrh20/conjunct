@@ -338,7 +338,7 @@ class Tree(Configuration):
 
             if new_children[i] == leaf:
                 new_children[i] = new_children[i].run_leaf_transition(letter, new_children[i].stack[0], conjuncts)
-                break
+                return Tree(self.sapda, self.stack, new_children)
 
             elif isinstance(new_children[i], Tree):
                 new_children[i] = new_children[i].find_leaf_for_transition(leaf, letter, conjuncts)

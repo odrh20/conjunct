@@ -1,4 +1,4 @@
-from prompt_toolkit import print_formatted_text, HTML
+#from prompt_toolkit import print_formatted_text, HTML
 
 
 class SAPDA:
@@ -14,6 +14,7 @@ class SAPDA:
         self.transitions = transitions
         self.initial_state = str(initial_state)
         self.initial_stack_symbol = str(initial_stack_symbol)
+        self.user_defined = user_defined
 
     def __eq__(self, other):
         return (self.states == other.states) and (self.input_alphabet == other.input_alphabet) and \
@@ -97,7 +98,7 @@ class SAPDA:
         transition_string = ""
         for transition in transition_string:
             transition_string += transition
-        print(transition_string)
+        #print(transition_string)
         return transition_list
 
     @staticmethod

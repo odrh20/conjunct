@@ -276,7 +276,7 @@ class Computation:
             return []
 
         # Else we reached a non-deterministic transition
-        print("\nLooking for solution...\n")
+        #print("\nLooking for solution...\n")
         #print("Current config: ", self.configuration.get_denotation())
         try:
             return self.dfs()
@@ -599,22 +599,22 @@ sapda7 = SAPDA(
 
 #print(sapda2)
 #sapda = Computation(sapda3, 'abbab$abbab')
-sapda = Computation(sapda2, 'cba')
+#sapda = Computation(sapda2, 'cba')
 # # #
-sapda.run_machine()
+#sapda.run_machine()
 # #
-print(sapda.computation)
+#print(sapda.computation)
 
 
-leaf1 = Leaf(sapda1, ['Z'], 'q0', 'abc')
-
-leaf2 = Leaf(sapda1, ['Z'], 'qbc+', 'abc')
-leaf3 = Leaf(sapda1, ['Z'], 'qac+', 'abc')
-tree1 = Tree(sapda1, ['e'], [leaf2, leaf3])
+# leaf1 = Leaf(sapda1, ['Z'], 'q0', 'abc')
+#
+# leaf2 = Leaf(sapda1, ['Z'], 'qbc+', 'abc')
+# leaf3 = Leaf(sapda1, ['Z'], 'qac+', 'abc')
+# tree1 = Tree(sapda1, ['e'], [leaf2, leaf3])
 
 
 # leaf1 = Leaf(sapda1, ['e'], 'q0', 'abc')
-print(tree1.print_tree())
+#print(tree1.print_tree())
 # leaf2 = Leaf(sapda1, ['Z'], 'q0', 'abc')
 # leaf3 = Leaf(sapda1, ['Z'], 'q1', 'abc')
 # subtree1 = Tree(sapda1, ['a', 'Z'], [leaf1, leaf1])

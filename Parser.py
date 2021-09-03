@@ -78,8 +78,8 @@ class Parser:
         return any(node.variable == self.grammar.start_variable for node in self.table[0, self.n-1])
 
     def populate_table(self):
-        print("Populating the CYK recognition matrix.\n"
-              "Look at the top-right cell. If the start variable is there, then the string is recognised.\n")
+        #print("Populating the CYK recognition matrix.\n"
+              #"Look at the top-right cell. If the start variable is there, then the string is recognised.\n")
         self.compute_diagonal()
 
         for k in range(self.n):
@@ -101,7 +101,7 @@ class Parser:
                     new_node = MatrixNode(i, i, variable)
                     new_node.update_pointers(self.word[i], None, None)
                     self.table[i, i].add(new_node)
-        print(self.table)
+        #print(self.table)
 
     def get_matrix(self):
 
@@ -228,5 +228,4 @@ class MatrixNode:
         return tuple(expansion)
 
     def __repr__(self):
-        print(f"i: {self.i}, j: {self.j}, var: {self.variable}, pointers: {tuple(self.pointers)}")
         return self.variable

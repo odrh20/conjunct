@@ -172,7 +172,7 @@ class SAPDATextInput(TextInput):
     def is_valid_sapda_input(self, text):
 
         transitions = self.get_transitions(text)
-        print("all transitions: ", transitions)
+        #print("all transitions: ", transitions)
         pattern = re.compile("δ\(.+,.+,.\)=(\(.+,.+\)∧)*\(.+,.+\)")
 
         return all(pattern.fullmatch(transition) for transition in transitions)
@@ -204,7 +204,7 @@ class CGTextInput(TextInput):
         Each line should consist of a single character, an arrow, and a string,
         ignoring spaces and brackets. eg. S ⟶ ab
         """
-        print("CALLING IS_VALID_INPUT (CG)")
+        #print("CALLING IS_VALID_INPUT (CG)")
         rules = self.get_rules(text)
         return len(rules) > 0 and all(len(rule) > 2 and rule[1] == '⟶' for rule in rules)
 
