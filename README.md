@@ -9,7 +9,7 @@ This document gives the instructions to install and run the Conjunct program.
 
 1. [Download Python3](https://www.python.org/downloads/).
 
-    The program may not run on older versions of Python. As of September 3 2021, the latest version is 3.9.7, which works with Conjunct.
+    The program may not run on older versions of Python. As of September 2021, the latest version is 3.9.7, which works with Conjunct.
 
 
 
